@@ -1,0 +1,29 @@
+*.iml
+.gradle
+/local.properties
+.idea/
+.DS_Store
+build/
+*/build/
+*/*/build/
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+.kotlin
+
+# Built application files
+*.apk
+*.aar
+*.aab
+*.dex
+*.class
+
+# Keystores & release keys
+*.jks
+*.keystore
+
+# OS & Cache files
+.DS_Store
+Thumbs.db

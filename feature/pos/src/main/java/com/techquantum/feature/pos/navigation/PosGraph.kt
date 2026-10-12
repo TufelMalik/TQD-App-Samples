@@ -1,0 +1,76 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
+package com.techquantum.feature.pos.navigation
+
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.techquantum.feature.pos.presentation.PosIntent
+import com.techquantum.feature.pos.presentation.PosViewModel
+import com.techquantum.feature.pos.ui.PosChargeScreen
+import com.techquantum.feature.pos.ui.PosReceiptScreen
+import com.techquantum.feature.pos.ui.PosWorkspaceScreen
+
+@Composable
+fun PosGraph(
+    navController: NavHostController,
+    onToggleDark: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: PosViewModel = hiltViewModel(),
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val entry by navController.currentBackStackEntryAsState()
+    val route = entry?.destination?.route ?: "workspace"
+    LaunchedEffect(state.receipt?.id, state.charging, route) {
+        if (route == "charge" && state.receipt != null && !state.charging) {
+            navController.navigate("receipt") { popUpTo("workspace"); launchSingleTop = true }
+        }
+    }
+    Scaffold(modifier, topBar = {
+        CenterAlignedTopAppBar(title = { Text(when (route) {
+            "charge" -> "Complete payment"
+            "receipt" -> "Payment complete"
+            else -> "Counter service"
+        }) }, navigationIcon = {
+            if (route != "workspace") IconButton({ navController.popBackStack() }) {
+                Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back to counter")
+            }
+        }, actions = {
+            IconButton(onToggleDark) { Icon(Icons.Outlined.DarkMode, "Toggle light and dark mode") }
+        })
+    }) { padding ->
+        NavHost(navController, startDestination = "workspace", modifier = Modifier.padding(padding)) {
+            composable("workspace") {
+                PosWorkspaceScreen(state, viewModel::accept, onCharge = {
+                    viewModel.accept(PosIntent.StartNewBill)
+                    navController.navigate("charge") { launchSingleTop = true }
+                })
+            }
+            composable("charge") {
+                PosChargeScreen(state, viewModel::accept, onBack = { navController.popBackStack() })
+            }
+            composable("receipt") {
+                PosReceiptScreen(state.receipt, onNewBill = {
+                    viewModel.accept(PosIntent.StartNewBill)
+                    navController.popBackStack("workspace", false)
+                })
+            }
+        }
+    }
+}
