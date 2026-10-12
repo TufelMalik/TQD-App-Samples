@@ -39,11 +39,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.techquantum.core.designsystem.AnimatedMoney
-import com.techquantum.core.designsystem.CartBadge
-import com.techquantum.core.designsystem.QuantityStepper
-import com.techquantum.core.designsystem.SkeletonShimmer
-import com.techquantum.core.designsystem.formatRupees
+import androidx.compose.ui.graphics.Brush
+import com.techquantum.core.designsystem.*
 import com.techquantum.feature.fooddelivery.domain.*
 import com.techquantum.feature.fooddelivery.presentation.*
 
@@ -55,49 +52,101 @@ fun FoodHomeScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onRestauran
     val largeType = LocalDensity.current.fontScale > 1.25f
     LazyColumn(modifier.fillMaxSize().testTag("food_home"), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         item {
-            Row(Modifier.fillMaxWidth().clickable { locationPicker = true }.heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Icon(Icons.Default.LocationOn, null, tint = MaterialTheme.colorScheme.onSurface)
-                Column(Modifier.weight(1f)) {
-                    Text("Deliver to", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(state.deliveryArea, style = MaterialTheme.typography.titleMedium)
+            Surface(
+                onClick = { locationPicker = true },
+                shape = RoundedCornerShape(22.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp)
+            ) {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.size(38.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.LocationOn, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                        }
+                    }
+                    Column(Modifier.weight(1f)) {
+                        Text("Deliver to", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(state.deliveryArea, style = MaterialTheme.typography.titleMedium)
+                    }
+                    Icon(Icons.Default.ExpandMore, "Change delivery area", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Icon(Icons.Default.ExpandMore, "Change delivery area")
             }
         }
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                LuxuryBadge(text = "Artisanal & Michelin Curated", icon = Icons.Default.AutoAwesome)
                 Text("Good food.\nA good day.", style = MaterialTheme.typography.displaySmall)
                 OutlinedTextField(state.query, { onIntent(FoodIntent.Search(it)) }, Modifier.fillMaxWidth().testTag("food_search"),
-                    placeholder = { Text("Restaurant or cuisine") }, leadingIcon = { Icon(Icons.Default.Search, null) },
+                    placeholder = { Text("Restaurant or cuisine") }, leadingIcon = { Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                     trailingIcon = if (state.query.isNotBlank()) ({ IconButton(onClick = { onIntent(FoodIntent.Search("")) }) { Icon(Icons.Default.Close, "Clear food search") } }) else null,
-                    singleLine = true, shape = RoundedCornerShape(20.dp), colors = accessibleFieldColors(),
+                    singleLine = true, shape = RoundedCornerShape(22.dp), colors = accessibleFieldColors(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { keyboard?.hide() }))
             }
         }
         item {
-            Surface(shape = RoundedCornerShape(26.dp), color = MaterialTheme.colorScheme.secondaryContainer) {
-                Column(Modifier.fillMaxWidth().padding(22.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Your lunch break,\nbut better.", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
-                    Text("Free delivery from ₹499. Local kitchens, freshly made.", style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer)
+            Surface(
+                shape = RoundedCornerShape(26.dp),
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+            ) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.secondaryContainer,
+                                    MaterialTheme.colorScheme.surfaceContainerHigh
+                                )
+                            )
+                        )
+                        .padding(22.dp)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        LuxuryBadge("Chef's Selection · Free Delivery > ₹499")
+                        Text("Your lunch break,\nbut better.", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                        Text("Free delivery from ₹499. Local kitchens, freshly made.", style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer)
+                    }
                 }
             }
         }
         item {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("What sounds good?", style = MaterialTheme.typography.titleLarge)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                    Text("What sounds good?", style = MaterialTheme.typography.titleLarge)
+                    Text("Explore all", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                }
                 Cuisine.entries.chunked(if (largeType) 2 else 3).forEach { cuisines ->
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         cuisines.forEach { cuisine ->
-                            FilterChip(state.cuisine == cuisine, { onIntent(FoodIntent.SelectCuisine(cuisine)) },
-                                label = { Text(cuisine.label) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp))
+                            FilterChip(
+                                selected = state.cuisine == cuisine,
+                                onClick = { onIntent(FoodIntent.SelectCuisine(cuisine)) },
+                                label = { Text(cuisine.label) },
+                                shape = RoundedCornerShape(999.dp),
+                                modifier = Modifier.weight(1f).heightIn(min = 48.dp)
+                            )
                         }
                     }
                 }
             }
         }
-        item { Text("Kitchens near you", style = MaterialTheme.typography.titleLarge) }
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                Text("Kitchens near you", style = MaterialTheme.typography.titleLarge)
+                Text("${state.filteredRestaurants.size} available", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
         when {
             state.loading -> items(3) { SkeletonShimmer(Modifier.fillMaxWidth().height(230.dp)) }
             state.error != null && state.restaurants.isEmpty() -> item { FoodEmptyPanel("The kitchens couldn't load", state.error,
@@ -124,21 +173,38 @@ fun FoodHomeScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onRestauran
 }
 
 @Composable private fun RestaurantCard(restaurant: Restaurant, onClick: () -> Unit, heroModifier: Modifier) {
-    Card(onClick = onClick, shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
-        RestaurantArtwork(restaurant, heroModifier.fillMaxWidth().height(170.dp))
-        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(restaurant.name, Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
-                Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.tertiaryContainer) {
-                    Row(Modifier.padding(horizontal = 8.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Star, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onTertiaryContainer)
-                        Text(" ${restaurant.rating}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onTertiaryContainer)
-                    }
-                }
+    Card(
+        onClick = onClick,
+        shape = RoundedCornerShape(26.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+    ) {
+        Box {
+            RestaurantArtwork(restaurant, heroModifier.fillMaxWidth().height(180.dp))
+            Row(
+                Modifier.fillMaxWidth().padding(14.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                LuxuryBadge(text = restaurant.cuisine.label)
+                RatingPill(rating = restaurant.rating)
             }
+        }
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(restaurant.name, style = MaterialTheme.typography.titleLarge)
             Text(restaurant.description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("${restaurant.cuisine.label} · ${restaurant.etaMinutes}–${restaurant.etaMinutes + 5} min · ${restaurant.distanceKm} km",
-                style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(Icons.Default.Schedule, null, Modifier.size(15.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("${restaurant.etaMinutes}–${restaurant.etaMinutes + 5} min", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("·", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(Icons.Default.Place, null, Modifier.size(15.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("${restaurant.distanceKm} km", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("·", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(restaurant.cuisine.label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
     }
 }
@@ -159,18 +225,45 @@ fun RestaurantMenuScreen(restaurant: Restaurant, state: FoodState, onIntent: (Fo
         LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item {
                 Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    RestaurantArtwork(restaurant, heroModifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(26.dp)))
+                    Box {
+                        RestaurantArtwork(restaurant, heroModifier.fillMaxWidth().height(210.dp).clip(RoundedCornerShape(28.dp)))
+                        Surface(
+                            shape = RoundedCornerShape(999.dp),
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+                            modifier = Modifier.align(Alignment.BottomEnd).padding(14.dp)
+                        ) {
+                            RatingPill(rating = restaurant.rating, modifier = Modifier.padding(2.dp))
+                        }
+                    }
                     Text(restaurant.description, style = MaterialTheme.typography.bodyLarge)
-                    Text("★ ${restaurant.rating} (${restaurant.reviewCount}) · ${restaurant.etaMinutes}–${restaurant.etaMinutes + 5} min · ${restaurant.distanceKm} km",
-                        style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        LuxuryBadge("${restaurant.etaMinutes}–${restaurant.etaMinutes + 5} min")
+                        LuxuryBadge("${restaurant.distanceKm} km away")
+                        LuxuryBadge("${restaurant.reviewCount} reviews")
+                    }
                     Text("5% GST, ₹5 platform fee. Delivery ₹29, free from ₹499.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             stickyHeader {
-                Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 2.dp) {
-                    LazyRow(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        item { FilterChip(state.menuCategory == null, { onIntent(FoodIntent.SelectMenuCategory(null)) }, label = { Text("All dishes") }) }
-                        items(MenuCategory.entries) { category -> FilterChip(state.menuCategory == category, { onIntent(FoodIntent.SelectMenuCategory(category)) }, label = { Text(category.label) }) }
+                Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 3.dp) {
+                    LazyRow(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        item {
+                            FilterChip(
+                                selected = state.menuCategory == null,
+                                onClick = { onIntent(FoodIntent.SelectMenuCategory(null)) },
+                                label = { Text("All dishes") },
+                                shape = RoundedCornerShape(999.dp)
+                            )
+                        }
+                        items(MenuCategory.entries) { category ->
+                            FilterChip(
+                                selected = state.menuCategory == category,
+                                onClick = { onIntent(FoodIntent.SelectMenuCategory(category)) },
+                                label = { Text(category.label) },
+                                shape = RoundedCornerShape(999.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -187,18 +280,23 @@ fun RestaurantMenuScreen(restaurant: Restaurant, state: FoodState, onIntent: (Fo
 }
 
 @Composable private fun DishRow(dish: Dish, quantity: Int, onAdd: () -> Unit, onDecrease: () -> Unit, onCustomize: () -> Unit, modifier: Modifier = Modifier) {
-    Surface(modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), color = MaterialTheme.colorScheme.surfaceContainerLow) {
-        Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+    ) {
+        Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 VegLabel(dish.vegetarian)
                 Text(dish.name, style = MaterialTheme.typography.titleMedium)
                 Text(dish.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(formatRupees(dish.price), style = MaterialTheme.typography.titleMedium)
-                if (dish.spice > 0) Text(if (dish.spice == 1) "Mild spice" else "Spicy", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (dish.spice > 0) Text(if (dish.spice == 1) "🌶️ Mild spice" else "🌶️🌶️ Spicy", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (dish.addOns.isNotEmpty()) TextButton(onClick = onCustomize, contentPadding = PaddingValues(0.dp), colors = accessibleTextButtonColors()) { Text("Customise") }
             }
             Column(Modifier.width(124.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                DishArtwork(dish, Modifier.size(112.dp).clip(RoundedCornerShape(18.dp)))
+                DishArtwork(dish, Modifier.size(112.dp).clip(RoundedCornerShape(20.dp)))
                 QuickFoodAdd(quantity, onAdd, onDecrease)
             }
         }
@@ -209,15 +307,26 @@ fun RestaurantMenuScreen(restaurant: Restaurant, state: FoodState, onIntent: (Fo
     val motion = MaterialTheme.motionScheme
     AnimatedContent(quantity > 0, transitionSpec = { (fadeIn(motion.fastEffectsSpec()) + scaleIn(motion.fastSpatialSpec(), .92f))
         .togetherWith(fadeOut(motion.fastEffectsSpec())).using(SizeTransform { _, _ -> motion.fastSpatialSpec() }) }, label = "Quick add") { added ->
-        if (!added) FilledTonalButton(onClick = onAdd, modifier = Modifier.heightIn(min = 48.dp)) { Icon(Icons.Default.Add, null, Modifier.size(18.dp)); Text(" Add") }
-        else Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
+        if (!added) FilledTonalButton(
+            onClick = onAdd,
+            modifier = Modifier.heightIn(min = 44.dp),
+            shape = RoundedCornerShape(999.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+        ) {
+            Icon(Icons.Default.Add, null, Modifier.size(18.dp)); Text(" Add")
+        }
+        else Surface(
+            shape = RoundedCornerShape(999.dp),
+            color = MaterialTheme.colorScheme.primaryContainer,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onDecrease, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Remove, "Remove one item", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer) }
+                IconButton(onClick = onDecrease, modifier = Modifier.size(44.dp)) { Icon(Icons.Default.Remove, "Remove one item", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer) }
                 AnimatedContent(quantity, label = "Dish count", transitionSpec = { fadeIn(motion.fastEffectsSpec()).togetherWith(fadeOut(motion.fastEffectsSpec())) }) {
                     Text(it.toString(), Modifier.width(28.dp).semantics { contentDescription = "Quantity $it" },
                         style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onPrimaryContainer)
                 }
-                IconButton(onClick = onAdd, modifier = Modifier.size(48.dp)) { Icon(Icons.Default.Add, "Add one item", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer) }
+                IconButton(onClick = onAdd, modifier = Modifier.size(44.dp)) { Icon(Icons.Default.Add, "Add one item", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer) }
             }
         }
     }
@@ -226,7 +335,7 @@ fun RestaurantMenuScreen(restaurant: Restaurant, state: FoodState, onIntent: (Fo
 @Composable private fun VegLabel(vegetarian: Boolean) {
     val colors = MaterialTheme.colorScheme
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Surface(Modifier.size(13.dp), shape = RoundedCornerShape(3.dp), border = BorderStroke(1.dp, if (vegetarian) colors.tertiary else colors.primary), color = colors.surface) {
+        Surface(Modifier.size(14.dp), shape = RoundedCornerShape(4.dp), border = BorderStroke(1.2.dp, if (vegetarian) colors.tertiary else colors.primary), color = colors.surface) {
             Box(Modifier.padding(3.dp).background(if (vegetarian) colors.tertiary else colors.primary, CircleShape))
         }
         Text(if (vegetarian) "Vegetarian" else "Non-vegetarian", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
@@ -287,14 +396,52 @@ fun FoodCartScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onCheckout:
         } else {
             LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
                 item {
-                    Text(state.cartRestaurant?.name ?: "Your kitchen", style = MaterialTheme.typography.headlineSmall)
-                    Text("Freshly prepared for your doorstep", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        LuxuryBadge("Artisanal Basket · ${state.cartCount} items")
+                        Text(state.cartRestaurant?.name ?: "Your kitchen", style = MaterialTheme.typography.headlineSmall)
+                        Text("Freshly prepared for your doorstep", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+                item {
+                    if (state.bill.subtotal < 499) {
+                        Surface(
+                            shape = RoundedCornerShape(18.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
+                        ) {
+                            Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Icon(Icons.Default.LocalShipping, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                                    Text("Add ${formatRupees(499 - state.bill.subtotal)} more for free delivery!", style = MaterialTheme.typography.labelMedium)
+                                }
+                                LinearProgressIndicator(
+                                    progress = { (state.bill.subtotal / 499f).coerceIn(0f, 1f) },
+                                    modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp))
+                                )
+                            }
+                        }
+                    } else {
+                        Surface(
+                            shape = RoundedCornerShape(18.dp),
+                            color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.45f),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.25f))
+                        ) {
+                            Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Icon(Icons.Default.CheckCircle, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.tertiary)
+                                Text("You unlocked Free Delivery on this order!", style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+                    }
                 }
                 items(state.cart, key = FoodLine::key) { line ->
-                    Surface(shape = RoundedCornerShape(22.dp), color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                    Surface(
+                        shape = RoundedCornerShape(22.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                    ) {
                         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
-                                DishArtwork(line.dish, Modifier.size(64.dp).clip(RoundedCornerShape(16.dp)))
+                                DishArtwork(line.dish, Modifier.size(68.dp).clip(RoundedCornerShape(18.dp)))
                                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                                     Text(line.dish.name, style = MaterialTheme.typography.titleMedium)
                                     if (line.addOns.isNotEmpty()) Text(line.addOns.joinToString { "${it.name} (+${formatRupees(it.price)})" },
@@ -314,15 +461,22 @@ fun FoodCartScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onCheckout:
                 }
                 item {
                     OutlinedTextField(state.instructions, { onIntent(FoodIntent.SetInstructions(it)) }, Modifier.fillMaxWidth(), label = { Text("Delivery instructions") },
-                        placeholder = { Text("Leave at the door, ring the bell…") }, minLines = 2, maxLines = 3, colors = accessibleFieldColors())
+                        placeholder = { Text("Leave at the door, ring the bell…") }, minLines = 2, maxLines = 3, shape = RoundedCornerShape(18.dp), colors = accessibleFieldColors())
                 }
                 item {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text("Thank your rider", style = MaterialTheme.typography.titleMedium)
-                        Text("Optional. Your full tip goes to the rider.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            items(listOf(0, 10, 20, 30)) { amount -> FilterChip(state.tip == amount, { onIntent(FoodIntent.SetTip(amount)) },
-                                label = { Text(if (amount == 0) "No tip" else formatRupees(amount)) }) }
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text("Thank your rider", style = MaterialTheme.typography.titleMedium)
+                            Text("Optional. Your full tip goes to the rider.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                items(listOf(0, 10, 20, 30)) { amount -> FilterChip(state.tip == amount, { onIntent(FoodIntent.SetTip(amount)) },
+                                    label = { Text(if (amount == 0) "No tip" else formatRupees(amount)) }, shape = RoundedCornerShape(999.dp)) }
+                            }
                         }
                     }
                 }
@@ -339,16 +493,27 @@ fun FoodCartScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onCheckout:
 }
 
 @Composable fun FoodBillCard(bill: FoodBill) {
-    Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(22.dp), color = MaterialTheme.colorScheme.surfaceContainerLow) {
-        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Every charge, up front", style = MaterialTheme.typography.titleMedium)
+    Surface(
+        Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+    ) {
+        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                Text("Every charge, up front", style = MaterialTheme.typography.titleMedium)
+                LuxuryBadge("Itemized Receipt")
+            }
             BillRow("Items & add-ons", bill.subtotal)
             BillRow("GST (5%)", bill.tax)
             BillRow("Delivery", bill.delivery, bill.delivery == 0)
             BillRow("Platform fee", bill.platform)
             BillRow("Rider tip", bill.tip)
-            HorizontalDivider()
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text("Total", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium); AnimatedMoney(bill.total) }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("Total", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+                AnimatedMoney(bill.total)
+            }
         }
     }
 }
@@ -360,13 +525,18 @@ fun FoodCartScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onCheckout:
 }
 @Composable private fun FoodOrderBar(state: FoodState, action: String, onClick: () -> Unit, enabled: Boolean = true) {
     val largeType = LocalDensity.current.fontScale > 1.25f
-    Surface(Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceContainer, tonalElevation = 3.dp) {
+    Surface(
+        Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        tonalElevation = 3.dp,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+    ) {
         if (largeType) Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text("Total", Modifier.weight(1f)); AnimatedMoney(state.bill.total) }
-            Button(onClick, Modifier.fillMaxWidth().heightIn(min = 52.dp), enabled = enabled) { Text(action) }
-        } else Row(Modifier.padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Button(onClick, Modifier.fillMaxWidth().heightIn(min = 52.dp), enabled = enabled, shape = RoundedCornerShape(18.dp)) { Text(action) }
+        } else Row(Modifier.padding(horizontal = 20.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Column(Modifier.weight(1f)) { AnimatedMoney(state.bill.total); Text("Includes tax & fees", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-            Button(onClick, Modifier.heightIn(min = 52.dp), enabled = enabled) { Text(action) }
+            Button(onClick, Modifier.heightIn(min = 52.dp), enabled = enabled, shape = RoundedCornerShape(18.dp)) { Text(action) }
         }
     }
 }
@@ -379,40 +549,80 @@ fun FoodCheckoutScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onBrows
         else {
             LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
                 item {
-                    Text("Good food, no sign-up.", style = MaterialTheme.typography.headlineMedium)
-                    Text("Enter delivery details to place your local preview order.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    TextButton(onClick = { onIntent(FoodIntent.UpdateAddress(FoodAddress("Aditi Shah", "9876543210", "24, River View Apartments, Adajan", "Surat", "395009"))) },
-                        enabled = !state.placingOrder, colors = accessibleTextButtonColors()) { Text("Use sample address") }
-                }
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text("Delivery address", style = MaterialTheme.typography.titleLarge)
-                        AddressField("Full name", state.address.name, state.addressErrors["name"], !state.placingOrder) { onIntent(FoodIntent.UpdateAddress(state.address.copy(name = it))) }
-                        AddressField("Mobile number", state.address.phone, state.addressErrors["phone"], !state.placingOrder, KeyboardType.Phone) {
-                            onIntent(FoodIntent.UpdateAddress(state.address.copy(phone = it.filter(Char::isDigit).take(10)))) }
-                        AddressField("Building, street & landmark", state.address.line, state.addressErrors["line"], !state.placingOrder) { onIntent(FoodIntent.UpdateAddress(state.address.copy(line = it.take(180)))) }
-                        AddressField("City", state.address.city, state.addressErrors["city"], !state.placingOrder) { onIntent(FoodIntent.UpdateAddress(state.address.copy(city = it))) }
-                        AddressField("PIN code", state.address.pinCode, state.addressErrors["pinCode"], !state.placingOrder, KeyboardType.Number) {
-                            onIntent(FoodIntent.UpdateAddress(state.address.copy(pinCode = it.filter(Char::isDigit).take(6)))) }
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        LuxuryBadge("Fast Guest Checkout")
+                        Text("Good food, no sign-up.", style = MaterialTheme.typography.headlineMedium)
+                        Text("Enter delivery details to place your local preview order.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        TextButton(onClick = { onIntent(FoodIntent.UpdateAddress(FoodAddress("Aditi Shah", "9876543210", "24, River View Apartments, Adajan", "Surat", "395009"))) },
+                            enabled = !state.placingOrder, colors = accessibleTextButtonColors()) { Text("Use sample address") }
                     }
                 }
                 item {
-                    Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("Payment", style = MaterialTheme.typography.titleLarge)
-                        FoodPayment.entries.forEach { payment ->
-                            Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).selectable(state.payment == payment, enabled = !state.placingOrder,
-                                role = Role.RadioButton, onClick = { onIntent(FoodIntent.SelectPayment(payment)) }), verticalAlignment = Alignment.CenterVertically) {
-                                RadioButton(state.payment == payment, null, enabled = !state.placingOrder, colors = accessibleRadioColors())
-                                Text(payment.label, Modifier.padding(start = 10.dp))
-                            }
+                    Surface(
+                        shape = RoundedCornerShape(24.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                            Text("Delivery address", style = MaterialTheme.typography.titleLarge)
+                            AddressField("Full name", state.address.name, state.addressErrors["name"], !state.placingOrder) { onIntent(FoodIntent.UpdateAddress(state.address.copy(name = it))) }
+                            AddressField("Mobile number", state.address.phone, state.addressErrors["phone"], !state.placingOrder, KeyboardType.Phone) {
+                                onIntent(FoodIntent.UpdateAddress(state.address.copy(phone = it.filter(Char::isDigit).take(10)))) }
+                            AddressField("Building, street & landmark", state.address.line, state.addressErrors["line"], !state.placingOrder) { onIntent(FoodIntent.UpdateAddress(state.address.copy(line = it.take(180)))) }
+                            AddressField("City", state.address.city, state.addressErrors["city"], !state.placingOrder) { onIntent(FoodIntent.UpdateAddress(state.address.copy(city = it))) }
+                            AddressField("PIN code", state.address.pinCode, state.addressErrors["pinCode"], !state.placingOrder, KeyboardType.Number) {
+                                onIntent(FoodIntent.UpdateAddress(state.address.copy(pinCode = it.filter(Char::isDigit).take(6)))) }
                         }
-                        Text("All payment choices are previews. No money is collected.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 item {
-                    Text("${state.cartCount} items from ${state.cartRestaurant?.name}", style = MaterialTheme.typography.titleMedium)
-                    if (state.instructions.isNotBlank()) Text("Delivery note: ${state.instructions}", style = MaterialTheme.typography.bodyMedium)
-                    FoodBillCard(state.bill)
+                    Surface(
+                        shape = RoundedCornerShape(24.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(Modifier.selectableGroup().padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text("Payment", style = MaterialTheme.typography.titleLarge)
+                            FoodPayment.entries.forEach { payment ->
+                                val selected = state.payment == payment
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f) else MaterialTheme.colorScheme.surface,
+                                    border = BorderStroke(1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(min = 56.dp)
+                                            .selectable(selected, enabled = !state.placingOrder, role = Role.RadioButton, onClick = { onIntent(FoodIntent.SelectPayment(payment)) })
+                                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        RadioButton(selected, null, enabled = !state.placingOrder, colors = accessibleRadioColors())
+                                        Text(payment.label, Modifier.padding(start = 10.dp), style = MaterialTheme.typography.bodyLarge)
+                                    }
+                                }
+                            }
+                            Text("All payment choices are previews. No money is collected.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+                item {
+                    Surface(
+                        shape = RoundedCornerShape(24.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text("${state.cartCount} items from ${state.cartRestaurant?.name}", style = MaterialTheme.typography.titleMedium)
+                            if (state.instructions.isNotBlank()) Text("Delivery note: ${state.instructions}", style = MaterialTheme.typography.bodyMedium)
+                            FoodBillCard(state.bill)
+                        }
+                    }
                 }
                 state.error?.let { error -> item { Text(error, Modifier.semantics { liveRegion = LiveRegionMode.Polite }, color = MaterialTheme.colorScheme.error) } }
             }
@@ -423,7 +633,7 @@ fun FoodCheckoutScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onBrows
 
 @Composable private fun AddressField(label: String, value: String, error: String?, enabled: Boolean, keyboardType: KeyboardType = KeyboardType.Text, onChange: (String) -> Unit) {
     OutlinedTextField(value, onChange, Modifier.fillMaxWidth(), enabled = enabled, label = { Text(label) }, singleLine = true,
-        isError = error != null, supportingText = if (error != null) ({ Text(error) }) else null, colors = accessibleFieldColors(),
+        shape = RoundedCornerShape(16.dp), isError = error != null, supportingText = if (error != null) ({ Text(error) }) else null, colors = accessibleFieldColors(),
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Next))
 }
 
@@ -437,7 +647,7 @@ fun FoodTrackingScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onHome:
     val motion = MaterialTheme.motionScheme
     LazyColumn(modifier.fillMaxSize().testTag("food_tracking"), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         item {
-            Text("Order ${order.id}", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LuxuryBadge("Live GPS Tracking · Order ${order.id}")
             AnimatedContent(state.trackingStage, transitionSpec = { (fadeIn(motion.defaultEffectsSpec()) + slideInVertically(motion.defaultSpatialSpec()) { it / 3 })
                 .togetherWith(fadeOut(motion.fastEffectsSpec())) }, label = "Delivery status") { stage ->
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -447,15 +657,19 @@ fun FoodTrackingScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onHome:
                 }
             }
         }
-        item { DeliveryRouteMap(state.trackingStage, order.restaurant.name, Modifier.fillMaxWidth().height(230.dp).clip(RoundedCornerShape(28.dp))) }
+        item { DeliveryRouteMap(state.trackingStage, order.restaurant.name, Modifier.fillMaxWidth().height(240.dp).clip(RoundedCornerShape(28.dp))) }
         item {
-            Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surfaceContainerLow) {
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+            ) {
                 Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                     TrackingStage.entries.forEach { stage ->
                         val completed = state.trackingStage.ordinal >= stage.ordinal
                         Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                             Icon(if (completed) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked, null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
+                                tint = if (completed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
                             Column {
                                 Text(stage.label, style = MaterialTheme.typography.titleMedium)
                                 if (state.trackingStage == stage) Text(stage.detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -466,17 +680,26 @@ fun FoodTrackingScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onHome:
             }
         }
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(order.restaurant.name, style = MaterialTheme.typography.titleLarge)
-                Text(order.lines.joinToString { "${it.quantity} × ${it.dish.name}" }, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("${order.address.line}, ${order.address.city} ${order.address.pinCode}", style = MaterialTheme.typography.bodyMedium)
-                Text("${formatRupees(order.bill.total)} · ${order.payment.label}", style = MaterialTheme.typography.titleMedium)
-                if (state.trackingStage != TrackingStage.DELIVERED) OutlinedButton(onClick = { onIntent(FoodIntent.AdvanceTracking) },
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) { Text("Preview next update") }
-                Button(onClick = { if (state.trackingStage == TrackingStage.DELIVERED) onIntent(FoodIntent.NewOrder); onHome() }, Modifier.fillMaxWidth().heightIn(min = 52.dp)) {
-                    Text(if (state.trackingStage == TrackingStage.DELIVERED) "Order something else" else "Back to kitchens")
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(order.restaurant.name, style = MaterialTheme.typography.titleLarge)
+                    Text(order.lines.joinToString { "${it.quantity} × ${it.dish.name}" }, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("${order.address.line}, ${order.address.city} ${order.address.pinCode}", style = MaterialTheme.typography.bodyMedium)
+                    Text("${formatRupees(order.bill.total)} · ${order.payment.label}", style = MaterialTheme.typography.titleMedium)
+                    if (state.trackingStage != TrackingStage.DELIVERED) OutlinedButton(onClick = { onIntent(FoodIntent.AdvanceTracking) },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) { Text("Preview next update") }
+                    Button(onClick = { if (state.trackingStage == TrackingStage.DELIVERED) onIntent(FoodIntent.NewOrder); onHome() },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(18.dp)) {
+                        Text(if (state.trackingStage == TrackingStage.DELIVERED) "Order something else" else "Back to kitchens")
+                    }
+                    Text("Live showcase preview · route and timing are simulated locally.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Text("Live showcase preview · route and timing are simulated locally.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

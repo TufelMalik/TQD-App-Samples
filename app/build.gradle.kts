@@ -39,6 +39,7 @@ android {
 
 dependencies {
     implementation(project(":core:designsystem"))
+    implementation(project(":core:billingengine"))
     implementation(project(":feature:ecommerce"))
     implementation(project(":feature:fooddelivery"))
     implementation(project(":feature:pos"))

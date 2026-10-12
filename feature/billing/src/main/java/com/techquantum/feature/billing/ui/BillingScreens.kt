@@ -6,6 +6,7 @@ package com.techquantum.feature.billing.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,6 +16,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
@@ -23,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -37,10 +40,7 @@ import androidx.compose.ui.unit.dp
 import com.techquantum.core.billingengine.BillLine
 import com.techquantum.core.billingengine.BillTotals
 import com.techquantum.core.billingengine.MenuItem
-import com.techquantum.core.designsystem.AnimatedMoney
-import com.techquantum.core.designsystem.QuantityStepper
-import com.techquantum.core.designsystem.SkeletonShimmer
-import com.techquantum.core.designsystem.formatRupees
+import com.techquantum.core.designsystem.*
 import com.techquantum.feature.billing.presentation.*
 
 @Composable
@@ -58,16 +58,25 @@ fun FoodSelectionScreen(
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             Column(Modifier.padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                LuxuryBadge("Kitchen Counter & Quick Billing")
                 Text("Fresh choices. Fast billing.", style = MaterialTheme.typography.headlineMedium)
                 Text("Tap to add. Hold an item to choose quantity and preparation notes.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
                 OutlinedTextField(
-                    state.query, { onIntent(BillingIntent.Search(it)) }, Modifier.fillMaxWidth(),
-                    label = { Text("Find food") }, singleLine = true,
-                    leadingIcon = { Icon(Icons.Outlined.Search, null) },
+                    value = state.query,
+                    onValueChange = { onIntent(BillingIntent.Search(it)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Find food") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(20.dp),
+                    leadingIcon = { Icon(Icons.Outlined.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                     trailingIcon = { if (state.query.isNotEmpty()) IconButton({ onIntent(BillingIntent.Search("")) }) {
                         Icon(Icons.Outlined.Close, "Clear food search")
                     } },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
                 )
             }
             CategoryRail(state, onIntent)
@@ -101,51 +110,74 @@ private fun CategoryRail(state: BillingState, onIntent: (BillingIntent) -> Unit)
     androidx.compose.foundation.lazy.LazyRow(contentPadding = PaddingValues(horizontal = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         items(listOf("All") + state.bill.catalog.map { it.category }.distinct()) { category ->
-            FilterChip(state.category == category, { onIntent(BillingIntent.SelectCategory(category)) },
-                label = { Text(category) }, modifier = Modifier.heightIn(min = 48.dp))
+            FilterChip(
+                selected = state.category == category,
+                onClick = { onIntent(BillingIntent.SelectCategory(category)) },
+                label = { Text(category) },
+                shape = RoundedCornerShape(999.dp),
+                modifier = Modifier.heightIn(min = 48.dp)
+            )
         }
     }
 }
 
 @Composable
 private fun FoodSelectionCard(item: MenuItem, count: Int, onIntent: (BillingIntent) -> Unit) {
-    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow,
-        border = if (count > 0) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null) {
+    Surface(
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, if (count > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+    ) {
         Column(Modifier.fillMaxWidth().combinedClickable(
             role = Role.Button,
             onClickLabel = "Add ${item.name}",
             onLongClickLabel = "Customize ${item.name}",
             onClick = { onIntent(BillingIntent.Add(item.id)) },
             onLongClick = { onIntent(BillingIntent.Edit(item.id, false)) },
-        ).padding(12.dp)) {
-            BillingFoodArtwork(item, Modifier.fillMaxWidth().height(90.dp))
+        ).padding(14.dp)) {
+            BillingFoodArtwork(item, Modifier.fillMaxWidth().height(92.dp).clip(RoundedCornerShape(14.dp)))
+            Spacer(Modifier.height(8.dp))
             FoodIndicators(item)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(item.name, Modifier.weight(1f).heightIn(min = 42.dp), style = MaterialTheme.typography.titleSmall,
                     maxLines = 2, overflow = TextOverflow.Ellipsis)
-                IconButton({ onIntent(BillingIntent.Edit(item.id, false)) }, Modifier.size(56.dp)) {
+                IconButton({ onIntent(BillingIntent.Edit(item.id, false)) }, Modifier.size(48.dp)) {
                     Icon(Icons.Outlined.EditNote, "Customize ${item.name}")
                 }
             }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(formatRupees(item.price), style = MaterialTheme.typography.titleMedium)
-                FilledTonalButton({ onIntent(BillingIntent.Add(item.id)) }, Modifier.heightIn(min = 56.dp).testTag("bill-add-${item.id}"),
-                    contentPadding = PaddingValues(horizontal = 14.dp)) { Text("Add") }
+                FilledTonalButton(
+                    onClick = { onIntent(BillingIntent.Add(item.id)) },
+                    modifier = Modifier.heightIn(min = 44.dp).testTag("bill-add-${item.id}"),
+                    shape = RoundedCornerShape(999.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp)
+                ) { Text("Add") }
             }
-            if (count > 0) Text("In bill: $count", color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.labelSmall)
+            if (count > 0) {
+                Spacer(Modifier.height(4.dp))
+                LuxuryBadge("In bill: $count", containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
         }
     }
 }
 
 @Composable
 private fun FoodIndicators(item: MenuItem) {
+    val colors = MaterialTheme.colorScheme
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-        Surface(Modifier.size(8.dp), shape = CircleShape,
-            color = if (item.isVeg) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error) {}
-        Text(if (item.isVeg) "Veg" else "Non-veg", style = MaterialTheme.typography.labelSmall)
-        Text(when (item.spiceLevel) { 0 -> "No spice"; 1 -> "Mild"; 2 -> "Medium"; else -> "Hot" },
-            style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Surface(
+            Modifier.size(12.dp),
+            shape = RoundedCornerShape(3.dp),
+            border = BorderStroke(1.dp, if (item.isVeg) colors.tertiary else colors.primary),
+            color = colors.surface
+        ) {
+            Box(Modifier.padding(2.5.dp).background(if (item.isVeg) colors.tertiary else colors.primary, CircleShape))
+        }
+        Text(if (item.isVeg) "Veg" else "Non-veg", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
+        Text("·", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
+        Text(when (item.spiceLevel) { 0 -> "No spice"; 1 -> "🌶️ Mild"; 2 -> "🌶️🌶️ Medium"; else -> "🌶️🌶️🌶️ Hot" },
+            style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
     }
 }
 
@@ -161,13 +193,13 @@ fun RunningBillScreen(
         LaunchedEffect(Unit) { onActionBarHeightChanged(0) }
         Column(Modifier.fillMaxSize().testTag("billing_running_bill").padding(24.dp), verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.Outlined.ReceiptLong, null, Modifier.size(72.dp))
+            Icon(Icons.Outlined.ReceiptLong, null, Modifier.size(72.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(16.dp))
             Text("Your next bill starts here", style = MaterialTheme.typography.headlineSmall)
             Text("Select food here or on the POS tab. Both use the same running bill.", textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 16.dp))
-            Button(onBrowse, Modifier.heightIn(min = 56.dp)) { Text("Select food") }
-            if (state.previewReceipt != null) TextButton(onPreview, Modifier.heightIn(min = 56.dp)) { Text("View last receipt") }
+            Button(onBrowse, Modifier.heightIn(min = 52.dp), shape = RoundedCornerShape(18.dp)) { Text("Select food") }
+            if (state.previewReceipt != null) TextButton(onPreview, Modifier.heightIn(min = 52.dp)) { Text("View last receipt") }
         }
         return
     }
@@ -178,23 +210,34 @@ fun RunningBillScreen(
         LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item {
-                Text("Running bill", style = MaterialTheme.typography.headlineMedium)
-                Text("${state.bill.count} items · Shared with POS", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                    Text("Running bill", style = MaterialTheme.typography.headlineMedium)
+                    LuxuryBadge("${state.bill.count} items · Shared with POS")
+                }
             }
             item {
                 Text("Counter or table", style = MaterialTheme.typography.titleSmall)
                 androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items((listOf(state.bill.table, "Takeaway", "Table 01", "Table 02")).distinct()) { table ->
-                        FilterChip(state.bill.table == table, { onIntent(BillingIntent.SelectTable(table)) },
-                            label = { Text(table) }, modifier = Modifier.heightIn(min = 48.dp))
+                        FilterChip(
+                            selected = state.bill.table == table,
+                            onClick = { onIntent(BillingIntent.SelectTable(table)) },
+                            label = { Text(table) },
+                            shape = RoundedCornerShape(999.dp),
+                            modifier = Modifier.heightIn(min = 48.dp)
+                        )
                     }
                 }
             }
             items(state.bill.lines, key = BillLine::key) { line ->
-                Surface(color = MaterialTheme.colorScheme.surfaceContainerLow, shape = MaterialTheme.shapes.large) {
-                    Column(Modifier.fillMaxWidth().padding(14.dp)) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    shape = RoundedCornerShape(22.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                ) {
+                    Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            BillingFoodArtwork(line.item, Modifier.size(62.dp))
+                            BillingFoodArtwork(line.item, Modifier.size(64.dp).clip(RoundedCornerShape(16.dp)))
                             Column(Modifier.weight(1f)) {
                                 Text(line.item.name, style = MaterialTheme.typography.titleMedium)
                                 Text("${formatRupees(line.item.price)} each", color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -202,17 +245,17 @@ fun RunningBillScreen(
                                 if (line.notes.isNotBlank()) Text(line.notes, style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            IconButton({ onIntent(BillingIntent.Remove(line.key)) }, Modifier.size(56.dp)) {
+                            IconButton({ onIntent(BillingIntent.Remove(line.key)) }, Modifier.size(48.dp)) {
                                 Icon(Icons.Outlined.DeleteOutline, "Remove ${line.item.name}")
                             }
                         }
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically) {
                             QuantityStepper(line.quantity, { onIntent(BillingIntent.ChangeQuantity(line.key, -1)) },
-                                { onIntent(BillingIntent.ChangeQuantity(line.key, 1)) }, touchTargetSize = 56.dp)
+                                { onIntent(BillingIntent.ChangeQuantity(line.key, 1)) }, touchTargetSize = 48.dp)
                             AnimatedMoney(line.total)
                         }
-                        TextButton({ onIntent(BillingIntent.Edit(line.key, true)) }, Modifier.heightIn(min = 48.dp)) { Text("Edit quantity & notes") }
+                        TextButton({ onIntent(BillingIntent.Edit(line.key, true)) }, Modifier.heightIn(min = 40.dp)) { Text("Edit quantity & notes") }
                     }
                 }
             }
@@ -220,15 +263,38 @@ fun RunningBillScreen(
                 Text("Demo discount", style = MaterialTheme.typography.titleSmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(0, 5, 10).forEach { percent ->
-                        FilterChip(state.bill.discountPercent == percent, { onIntent(BillingIntent.ApplyDiscount(percent)) },
-                            label = { Text(if (percent == 0) "None" else "$percent%") }, modifier = Modifier.heightIn(min = 48.dp))
+                        FilterChip(
+                            selected = state.bill.discountPercent == percent,
+                            onClick = { onIntent(BillingIntent.ApplyDiscount(percent)) },
+                            label = { Text(if (percent == 0) "None" else "$percent%") },
+                            shape = RoundedCornerShape(999.dp),
+                            modifier = Modifier.heightIn(min = 48.dp)
+                        )
                     }
                 }
             }
-            item { BillingTotals(state.bill.totals, state.bill.discountPercent) }
+            item {
+                Surface(
+                    shape = RoundedCornerShape(22.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainer,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Box(Modifier.padding(18.dp)) {
+                        BillingTotals(state.bill.totals, state.bill.discountPercent)
+                    }
+                }
+            }
             item { Text("Demo GST is 5% after discount, rounded to whole rupees. All charges are shown before printing.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall) }
-            item { OutlinedButton(onBrowse, Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Add more food") } }
+            item {
+                OutlinedButton(
+                    onClick = onBrowse,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                ) { Text("Add more food") }
+            }
         }
     }
 }
@@ -242,13 +308,17 @@ private fun BillingActionBar(
     onClick: () -> Unit,
     onHeightChanged: (Int) -> Unit,
 ) {
-    Surface(modifier = Modifier.onSizeChanged { onHeightChanged(it.height) }, tonalElevation = 3.dp) {
+    Surface(
+        modifier = Modifier.onSizeChanged { onHeightChanged(it.height) },
+        tonalElevation = 3.dp,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+    ) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 AnimatedMoney(total)
             }
-            Button(onClick, Modifier.fillMaxWidth().heightIn(min = 56.dp), enabled = enabled) { Text(action) }
+            Button(onClick, Modifier.fillMaxWidth().heightIn(min = 52.dp), enabled = enabled, shape = RoundedCornerShape(18.dp)) { Text(action) }
         }
     }
 }
@@ -260,7 +330,7 @@ fun BillingTotals(totals: BillTotals, discountPercent: Int? = null, receiptStyle
         ReceiptMoneyRow(if (discountPercent != null) "Discount ($discountPercent%)" else "Discount", totals.discount,
             negative = true, receiptStyle = receiptStyle)
         ReceiptMoneyRow("Demo GST (5%)", totals.tax, receiptStyle = receiptStyle)
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text("Total", style = MaterialTheme.typography.titleMedium, fontFamily = if (receiptStyle) FontFamily.Monospace else null)
             AnimatedMoney(totals.total)
@@ -292,14 +362,29 @@ fun BillPreviewScreen(
         return
     }
     Scaffold(modifier = Modifier.testTag("billing_preview"), bottomBar = {
-        Surface(modifier = Modifier.onSizeChanged { onActionBarHeightChanged(it.height) }, tonalElevation = 3.dp) {
+        Surface(
+            modifier = Modifier.onSizeChanged { onActionBarHeightChanged(it.height) },
+            tonalElevation = 3.dp,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+        ) {
             Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button({ onIntent(BillingIntent.Output(BillingOutput.PRINT)) }, Modifier.fillMaxWidth().heightIn(min = 56.dp), enabled = !state.busy) {
+                Button(
+                    onClick = { onIntent(BillingIntent.Output(BillingOutput.PRINT)) },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    enabled = !state.busy
+                ) {
                     Icon(Icons.Outlined.Print, null)
                     Spacer(Modifier.width(10.dp))
                     Text(if (state.busy) "Preparing receipt…" else "Print demo bill")
                 }
-                OutlinedButton({ onIntent(BillingIntent.Output(BillingOutput.SHARE)) }, Modifier.fillMaxWidth().heightIn(min = 56.dp), enabled = !state.busy) {
+                OutlinedButton(
+                    onClick = { onIntent(BillingIntent.Output(BillingOutput.SHARE)) },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    enabled = !state.busy,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                ) {
                     Icon(Icons.Outlined.Share, null)
                     Spacer(Modifier.width(10.dp))
                     Text("Share demo receipt")
@@ -309,7 +394,10 @@ fun BillPreviewScreen(
     }, contentWindowInsets = WindowInsets(0, 0, 0, 0)) { padding ->
         LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item {
-                Text("Receipt preview", style = MaterialTheme.typography.headlineMedium)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                    Text("Receipt preview", style = MaterialTheme.typography.headlineMedium)
+                    LuxuryBadge("Thermal Print Ready")
+                }
                 Text("Demo output · No printer or payment service connected", color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall)
                 PaperFeedAnimation(state.busy)
@@ -318,24 +406,33 @@ fun BillPreviewScreen(
                 Text("Payment label", style = MaterialTheme.typography.titleSmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("UPI (demo)", "Cash (demo)").forEach { payment ->
-                        FilterChip(state.payment == payment, { onIntent(BillingIntent.SelectPayment(payment)) }, label = { Text(payment) },
-                            enabled = !state.busy, modifier = Modifier.heightIn(min = 48.dp))
+                        FilterChip(
+                            selected = state.payment == payment,
+                            onClick = { onIntent(BillingIntent.SelectPayment(payment)) },
+                            label = { Text(payment) },
+                            enabled = !state.busy,
+                            shape = RoundedCornerShape(999.dp),
+                            modifier = Modifier.heightIn(min = 48.dp)
+                        )
                     }
                 }
             }
             item {
-                Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
-                    Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Surface(
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                ) {
+                    Column(Modifier.fillMaxWidth().padding(22.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(Icons.Outlined.Restaurant, null, Modifier.size(30.dp))
+                            Icon(Icons.Outlined.Restaurant, null, Modifier.size(30.dp), tint = MaterialTheme.colorScheme.primary)
                             Text("TechQuantum Kitchen", style = MaterialTheme.typography.titleLarge, fontFamily = FontFamily.Monospace)
                             Text("Ahmedabad · Counter showcase", style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
                             Spacer(Modifier.height(8.dp))
                             Text(receipt?.let { "Bill #${it.id.removePrefix("BILL-")}" } ?: "Draft bill", fontFamily = FontFamily.Monospace)
                             Text(receipt?.table ?: state.bill.table, style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
                         }
-                        HorizontalDivider()
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                         lines.forEach { line ->
                             Column {
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -348,7 +445,7 @@ fun BillPreviewScreen(
                                     fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
-                        HorizontalDivider()
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                         BillingTotals(totals, if (receipt == null) state.bill.discountPercent else null, receiptStyle = true)
                         Text("Payment: ${receipt?.payment ?: state.payment}", style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
                         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -381,11 +478,22 @@ fun BillingItemEditor(state: BillingState, onIntent: (BillingIntent) -> Unit) {
             FoodIndicators(item)
             Text("Quantity", style = MaterialTheme.typography.titleMedium)
             QuantityStepper(state.editQuantity, { onIntent(BillingIntent.EditQuantity(-1)) },
-                { onIntent(BillingIntent.EditQuantity(1)) }, touchTargetSize = 56.dp)
-            OutlinedTextField(state.editNotes, { onIntent(BillingIntent.EditNotes(it)) }, Modifier.fillMaxWidth(),
-                label = { Text("Preparation notes") }, placeholder = { Text("Less spice, no onion…") }, maxLines = 3,
-                supportingText = { Text("${state.editNotes.length}/120 characters") })
-            Button({ onIntent(BillingIntent.SaveEditor) }, Modifier.fillMaxWidth().heightIn(min = 56.dp)) {
+                { onIntent(BillingIntent.EditQuantity(1)) }, touchTargetSize = 48.dp)
+            OutlinedTextField(
+                value = state.editNotes,
+                onValueChange = { onIntent(BillingIntent.EditNotes(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                label = { Text("Preparation notes") },
+                placeholder = { Text("Less spice, no onion…") },
+                maxLines = 3,
+                supportingText = { Text("${state.editNotes.length}/120 characters") }
+            )
+            Button(
+                onClick = { onIntent(BillingIntent.SaveEditor) },
+                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                shape = RoundedCornerShape(18.dp)
+            ) {
                 Text(if (state.editingExisting) "Update item" else "Add ${state.editQuantity} to bill")
             }
         }
@@ -409,8 +517,8 @@ fun BillingOutputSheet(state: BillingState, onDismiss: () -> Unit, onNewBill: ()
             Text(if (state.output.output == BillingOutput.PRINT) "Demo printer finished. Your receipt is available for this session."
                 else "Demo share completed. Your receipt is available for this session.", textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Button(onDismiss, Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Done") }
-            TextButton(onNewBill, Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Start another bill") }
+            Button(onDismiss, Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(18.dp)) { Text("Done") }
+            TextButton(onNewBill, Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Start another bill") }
         }
     }
 }

@@ -4,9 +4,11 @@
 package com.techquantum.feature.ecommerce.ui
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -79,12 +81,17 @@ fun CartScreen(state: EcommerceState, onIntent: (EcommerceIntent) -> Unit, onChe
                         Icon(Icons.Outlined.DeleteOutline, "Remove ${item.product.name}", tint = MaterialTheme.colorScheme.error)
                     }
                 }, enableDismissFromStartToEnd = false, modifier = Modifier.animateItem()) {
-                    Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
-                        Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                            ProductArtwork(item.product, Modifier.width(72.dp).height(120.dp))
+                    Surface(
+                        shape = RoundedCornerShape(24.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+                        shadowElevation = 1.dp,
+                    ) {
+                        Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                            ProductArtwork(item.product, Modifier.width(76.dp).height(124.dp))
                             Column(Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(item.product.name, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
+                                    Text(item.product.name, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
                                     IconButton({ onIntent(EcommerceIntent.RemoveFromCart(item.key)) }) {
                                         Icon(Icons.Outlined.DeleteOutline, "Remove ${item.product.name}")
                                     }
@@ -105,9 +112,17 @@ fun CartScreen(state: EcommerceState, onIntent: (EcommerceIntent) -> Unit, onChe
                 }
             }
             item {
-                Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = MaterialTheme.shapes.large) {
-                    Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Icon(Icons.Outlined.LocalShipping, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                Surface(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = RoundedCornerShape(22.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f)),
+                ) {
+                    Row(Modifier.fillMaxWidth().padding(18.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Surface(shape = androidx.compose.foundation.shape.CircleShape, color = MaterialTheme.colorScheme.surface.copy(alpha = 0.45f), modifier = Modifier.size(36.dp)) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(Icons.Outlined.LocalShipping, null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(20.dp))
+                            }
+                        }
                         Text(if (state.delivery == 0) "Your bag qualifies for complimentary delivery."
                             else "Add ${rupees(1999 - state.subtotal)} more for complimentary delivery.",
                             color = MaterialTheme.colorScheme.onSecondaryContainer, style = MaterialTheme.typography.bodyMedium)
@@ -123,7 +138,11 @@ fun CartScreen(state: EcommerceState, onIntent: (EcommerceIntent) -> Unit, onChe
 
 @Composable
 private fun PurchaseBar(label: String, total: Int, action: String, onAction: () -> Unit, enabled: Boolean = true) {
-    Surface(shadowElevation = 8.dp, color = MaterialTheme.colorScheme.surfaceContainer) {
+    Surface(
+        shadowElevation = 8.dp,
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.96f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+    ) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically) {
@@ -131,22 +150,30 @@ private fun PurchaseBar(label: String, total: Int, action: String, onAction: () 
                 AnimatedMoney(total)
             }
             Spacer(Modifier.height(12.dp))
-            Button(onAction, Modifier.fillMaxWidth().heightIn(min = 56.dp), enabled = enabled) { Text(action) }
+            Button(onAction, Modifier.fillMaxWidth().heightIn(min = 56.dp), shape = RoundedCornerShape(16.dp), enabled = enabled) {
+                Text(action, style = MaterialTheme.typography.titleSmall)
+            }
         }
     }
 }
 
 @Composable
 private fun OrderTotals(subtotal: Int, delivery: Int, total: Int) {
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Order summary", style = MaterialTheme.typography.titleLarge)
-        TotalLine("Subtotal", rupees(subtotal))
-        TotalLine("Delivery", if (delivery == 0) "Complimentary" else rupees(delivery))
-        TotalLine("GST", "Included in prices")
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Total", style = MaterialTheme.typography.titleMedium)
-            AnimatedMoney(total)
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+    ) {
+        Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Order summary", style = MaterialTheme.typography.titleLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+            TotalLine("Subtotal", rupees(subtotal))
+            TotalLine("Delivery", if (delivery == 0) "Complimentary" else rupees(delivery))
+            TotalLine("GST", "Included in prices")
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("Total", style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+                AnimatedMoney(total)
+            }
         }
     }
 }
@@ -155,7 +182,7 @@ private fun OrderTotals(subtotal: Int, delivery: Int, total: Int) {
 private fun TotalLine(label: String, value: String) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
-        Text(value, style = MaterialTheme.typography.bodyMedium)
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
     }
 }
 
@@ -179,7 +206,7 @@ fun CheckoutScreen(state: EcommerceState, onIntent: (EcommerceIntent) -> Unit, o
             Text("One last step.", style = MaterialTheme.typography.headlineLarge)
             Text("A showcase checkout. No payment is collected and no order is sent.",
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("Delivery address", style = MaterialTheme.typography.titleLarge)
+            Text("Delivery address", style = MaterialTheme.typography.titleLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
             val address = state.address
             AddressField("Full name", address.name, state.addressErrors["name"], fields.getValue("name")) {
                 onIntent(EcommerceIntent.UpdateAddress(address.copy(name = it)))
@@ -197,17 +224,21 @@ fun CheckoutScreen(state: EcommerceState, onIntent: (EcommerceIntent) -> Unit, o
                 onIntent(EcommerceIntent.UpdateAddress(address.copy(pinCode = it)))
             }
             Spacer(Modifier.height(4.dp))
-            Text("Payment method", style = MaterialTheme.typography.titleLarge)
+            Text("Payment method", style = MaterialTheme.typography.titleLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
             PaymentMethod.entries.forEach { method ->
-                Surface(shape = MaterialTheme.shapes.large, color = if (state.payment == method)
-                    MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow) {
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = if (state.payment == method) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+                    border = BorderStroke(if (state.payment == method) 1.5.dp else 1.dp,
+                        if (state.payment == method) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+                ) {
                     Row(Modifier.fillMaxWidth().clickable(role = Role.RadioButton) { onIntent(EcommerceIntent.SelectPayment(method)) }
-                        .semantics { selected = state.payment == method }.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                        .semantics { selected = state.payment == method }.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         RadioButton(state.payment == method, { onIntent(EcommerceIntent.SelectPayment(method)) },
                             colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.onSurface,
                                 unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant))
-                        Column {
-                            Text(method.label, style = MaterialTheme.typography.titleMedium)
+                        Column(Modifier.padding(start = 6.dp)) {
+                            Text(method.label, style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
                             Text(if (method == PaymentMethod.CASH_ON_DELIVERY) "Pay on arrival · demo only" else "Simulated payment · no details required",
                                 style = MaterialTheme.typography.bodySmall, color = if (state.payment == method)
                                     MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurfaceVariant)
@@ -215,7 +246,7 @@ fun CheckoutScreen(state: EcommerceState, onIntent: (EcommerceIntent) -> Unit, o
                     }
                 }
             }
-            Text("Review your pieces", style = MaterialTheme.typography.titleLarge)
+            Text("Review your pieces", style = MaterialTheme.typography.titleLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
             state.cart.forEach { item -> TotalLine("${item.product.name} × ${item.quantity}", rupees(item.total)) }
             OrderTotals(state.subtotal, state.delivery, state.total)
             state.error?.let { error ->
@@ -235,9 +266,12 @@ private fun AddressField(label: String, value: String, error: String?, focus: Fo
         label = { Text(label) }, isError = error != null, singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         supportingText = if (error != null) ({ Text(error) }) else null,
-        shape = MaterialTheme.shapes.medium,
-        colors = OutlinedTextFieldDefaults.colors(focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-            focusedBorderColor = MaterialTheme.colorScheme.onSurface, cursorColor = MaterialTheme.colorScheme.onSurface))
+        shape = RoundedCornerShape(16.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+            focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+            cursorColor = MaterialTheme.colorScheme.onSurface))
 }
 
 @Composable
@@ -273,19 +307,24 @@ fun ConfirmationScreen(order: OrderReceipt?, onContinue: () -> Unit) {
         Text("Made for your moments.", style = MaterialTheme.typography.headlineLarge)
         Text("Thank you, ${order.address.name.substringBefore(' ')}. Your demo order is confirmed.",
             style = MaterialTheme.typography.bodyLarge, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-        Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.surfaceContainerLow) {
-            Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Text(order.id, style = MaterialTheme.typography.titleLarge)
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+            shadowElevation = 2.dp,
+        ) {
+            Column(Modifier.fillMaxWidth().padding(22.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Text(order.id, style = MaterialTheme.typography.titleLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
                 Text("${order.items.sumOf { it.quantity }} pieces · ${order.payment.label}", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                HorizontalDivider()
-                Text("Delivery to", style = MaterialTheme.typography.labelLarge)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                Text("Delivery to", style = MaterialTheme.typography.labelLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
                 Text("${order.address.name}\n${order.address.line}\n${order.address.city} ${order.address.pinCode}")
                 OrderTotals(order.subtotal, order.delivery, order.total)
             }
         }
         Text("This is a local showcase order. No payment or delivery has been arranged.",
             color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-        Button(onContinue, Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text("Continue shopping") }
+        Button(onContinue, Modifier.fillMaxWidth().heightIn(min = 56.dp), shape = RoundedCornerShape(16.dp)) { Text("Continue shopping", style = MaterialTheme.typography.titleSmall) }
         Spacer(Modifier.height(20.dp))
     }
 }

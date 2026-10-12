@@ -20,9 +20,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Badge
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -48,19 +51,21 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.sp
 import java.text.NumberFormat
 import java.util.Locale
 
-/** Stable-geometry first paint. Its colors track the active Material surface hierarchy. */
+/** Stable-geometry first paint with pearlescent luxury shimmer. Its colors track the active Material surface hierarchy. */
 @Composable
 fun SkeletonShimmer(modifier: Modifier = Modifier) {
     val base = MaterialTheme.colorScheme.surfaceContainerHigh
     val highlight = MaterialTheme.colorScheme.surfaceContainerLowest
+    val mid = MaterialTheme.colorScheme.surfaceContainer
     val transition = rememberInfiniteTransition(label = "Product skeleton")
     val phase by transition.animateFloat(
         initialValue = -1f,
         targetValue = 2f,
-        animationSpec = infiniteRepeatable(tween(1200, easing = LinearEasing), RepeatMode.Restart),
+        animationSpec = infiniteRepeatable(tween(1400, easing = LinearEasing), RepeatMode.Restart),
         label = "Shimmer sweep",
     )
     Box(
@@ -74,13 +79,123 @@ fun SkeletonShimmer(modifier: Modifier = Modifier) {
                 val width = size.width.coerceAtLeast(1f)
                 val startX = phase * width
                 val brush = Brush.linearGradient(
-                    listOf(base, highlight, base),
+                    listOf(base, mid, highlight, mid, base),
                     start = Offset(startX, 0f),
                     end = Offset(startX + width, size.height),
                 )
                 onDrawBehind { drawRect(brush) }
             },
     )
+}
+
+/** Luxury badge pill with editorial uppercase tracking for haute tags and culinary highlights. */
+@Composable
+fun LuxuryBadge(
+    text: String,
+    modifier: Modifier = Modifier,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    containerColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.secondaryContainer,
+    contentColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSecondaryContainer,
+) {
+    Surface(
+        modifier = modifier,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
+        color = containerColor,
+        contentColor = contentColor,
+        border = BorderStroke(0.5.dp, contentColor.copy(alpha = 0.25f)),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp),
+        ) {
+            if (icon != null) {
+                androidx.compose.material3.Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(12.dp),
+                    tint = contentColor,
+                )
+            }
+            Text(
+                text = text.uppercase(),
+                style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.1.sp),
+                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+            )
+        }
+    }
+}
+
+/** Luxury rating chip with micro star glyph and jewel-container styling. */
+@Composable
+fun RatingPill(
+    rating: Double,
+    reviewCount: Int? = null,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.35f)),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp),
+        ) {
+            androidx.compose.material3.Icon(
+                imageVector = androidx.compose.material.icons.Icons.Default.Star,
+                contentDescription = null,
+                modifier = Modifier.size(12.dp),
+                tint = MaterialTheme.colorScheme.onTertiaryContainer,
+            )
+            Text(
+                text = String.format(java.util.Locale.US, "%.1f", rating),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+            )
+            if (reviewCount != null) {
+                Text(
+                    text = "($reviewCount)",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun RatingPill(
+    rating: Float,
+    reviewCount: Int? = null,
+    modifier: Modifier = Modifier,
+) {
+    RatingPill(rating.toDouble(), reviewCount, modifier)
+}
+
+/** Luxury discount savings pill with emphasized primary tint. */
+@Composable
+fun DiscountPill(
+    percent: Int,
+    modifier: Modifier = Modifier,
+) {
+    if (percent <= 0) return
+    Surface(
+        modifier = modifier,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp),
+        color = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+    ) {
+        Text(
+            text = "$percent% OFF",
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.8.sp),
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+        )
+    }
 }
 
 @Composable

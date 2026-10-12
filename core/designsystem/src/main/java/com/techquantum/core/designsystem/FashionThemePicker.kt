@@ -69,22 +69,24 @@ fun FashionThemePicker(
             Column(
                 Modifier.fillMaxWidth().weight(1f, fill = false)
                     .verticalScroll(rememberScrollState()).selectableGroup(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 FashionTheme.entries.forEach { theme ->
                     val selected = theme == selectedTheme
                     Surface(
-                        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+                        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
                         contentColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                        shape = MaterialTheme.shapes.medium,
-                        border = if (selected) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null,
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+                        border = BorderStroke(if (selected) 1.5.dp else 1.dp,
+                            if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+                        shadowElevation = if (selected) 2.dp else 0.dp,
                     ) {
                         Row(
                             Modifier.fillMaxWidth().selectable(
                                 selected = selected, role = Role.RadioButton, onClick = { onThemeSelected(theme) },
-                            ).padding(horizontal = 12.dp, vertical = 14.dp),
+                            ).padding(horizontal = 16.dp, vertical = 16.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
                         ) {
                             RadioButton(
                                 selected = selected,
@@ -94,17 +96,17 @@ fun FashionThemePicker(
                                     unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 ),
                             )
-                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                Text(theme.displayName, style = MaterialTheme.typography.titleSmall)
-                                Text(theme.description, style = MaterialTheme.typography.bodySmall)
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(theme.displayName, style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
+                                Text(theme.description, style = MaterialTheme.typography.bodySmall, color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant)
                                 FashionStoreTheme(theme, darkTheme) { ThemePaletteSwatches() }
                             }
                         }
                     }
                 }
             }
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Done") }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)) { Text("Done", style = MaterialTheme.typography.titleSmall) }
         }
     }
 }
@@ -113,11 +115,12 @@ fun FashionThemePicker(
 @Composable
 private fun ThemePaletteSwatches() {
     val colors = MaterialTheme.colorScheme
-    Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+    Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         listOf(colors.primary, colors.secondary, colors.tertiary, colors.outline, colors.background).forEach { color ->
             Surface(
-                modifier = Modifier.size(17.dp), shape = CircleShape,
-                color = color, border = BorderStroke(1.dp, colors.outlineVariant),
+                modifier = Modifier.size(20.dp), shape = CircleShape,
+                color = color, border = BorderStroke(1.dp, colors.outlineVariant.copy(alpha = 0.6f)),
+                shadowElevation = 1.dp,
             ) { Box(Modifier.background(color)) }
         }
     }

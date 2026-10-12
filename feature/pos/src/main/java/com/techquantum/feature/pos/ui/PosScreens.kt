@@ -11,6 +11,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -45,10 +46,7 @@ import com.techquantum.core.billingengine.BillLine
 import com.techquantum.core.billingengine.BillReceipt
 import com.techquantum.core.billingengine.BillTotals
 import com.techquantum.core.billingengine.MenuItem
-import com.techquantum.core.designsystem.AnimatedMoney
-import com.techquantum.core.designsystem.QuantityStepper
-import com.techquantum.core.designsystem.SkeletonShimmer
-import com.techquantum.core.designsystem.formatRupees
+import com.techquantum.core.designsystem.*
 import com.techquantum.feature.pos.presentation.PosIntent
 import com.techquantum.feature.pos.presentation.PosState
 
@@ -72,21 +70,37 @@ fun PosWorkspaceScreen(state: PosState, onIntent: (PosIntent) -> Unit, onCharge:
                     MenuPanel(state, onIntent, Modifier.weight(.62f).fillMaxHeight())
                     Surface(
                         Modifier.weight(.38f).fillMaxHeight().graphicsLayer { scaleX = entryPulse.value; scaleY = entryPulse.value },
-                        shape = MaterialTheme.shapes.large,
+                        shape = RoundedCornerShape(24.dp),
                         color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
                     ) { BillPanel(state, onIntent, onCharge) }
                 }
             } else {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    FilterChip(!showBill, { showBill = false }, label = { Text("Menu") }, Modifier.weight(1f).heightIn(min = 56.dp))
-                    FilterChip(showBill, { showBill = true }, label = { Text("Running bill · ${state.bill.count}") }, Modifier.weight(1f).heightIn(min = 56.dp))
+                    FilterChip(
+                        selected = !showBill,
+                        onClick = { showBill = false },
+                        label = { Text("Menu") },
+                        shape = RoundedCornerShape(999.dp),
+                        modifier = Modifier.weight(1f).heightIn(min = 52.dp)
+                    )
+                    FilterChip(
+                        selected = showBill,
+                        onClick = { showBill = true },
+                        label = { Text("Running bill · ${state.bill.count}") },
+                        shape = RoundedCornerShape(999.dp),
+                        modifier = Modifier.weight(1f).heightIn(min = 52.dp)
+                    )
                 }
                 if (showBill) {
                     BillPanel(state, onIntent, onCharge, Modifier.weight(1f))
                 } else {
                     MenuPanel(state, onIntent, Modifier.weight(1f))
-                    Button({ showBill = true }, Modifier.fillMaxWidth().heightIn(min = 60.dp)) {
+                    Button(
+                        onClick = { showBill = true },
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                        shape = RoundedCornerShape(18.dp)
+                    ) {
                         Text("Review ${state.bill.count} items · ${formatRupees(state.bill.totals.total)}")
                     }
                 }
@@ -99,18 +113,37 @@ fun PosWorkspaceScreen(state: PosState, onIntent: (PosIntent) -> Unit, onCharge:
 private fun CounterHeader(state: PosState, onIntent: (PosIntent) -> Unit, wide: Boolean) {
     var tablesOpen by remember { mutableStateOf(false) }
     val header: @Composable () -> Unit = {
-        Column {
-            Text("TechQuantum Kitchen", style = MaterialTheme.typography.titleLarge)
-            Text("Operator ${state.operator} · Demo counter", style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(44.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(Icons.Outlined.PointOfSale, null, tint = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.size(24.dp))
+                }
+            }
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("TechQuantum Kitchen", style = MaterialTheme.typography.titleLarge)
+                    LuxuryBadge("Live POS")
+                }
+                Text("Operator ${state.operator} · Demo counter", style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
         Box {
-            OutlinedButton({ tablesOpen = true }, Modifier.heightIn(min = 56.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)) {
-                Icon(Icons.Outlined.TableRestaurant, null)
+            OutlinedButton(
+                onClick = { tablesOpen = true },
+                modifier = Modifier.heightIn(min = 52.dp),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
+            ) {
+                Icon(Icons.Outlined.TableRestaurant, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(state.bill.table)
-                Icon(Icons.Outlined.ExpandMore, null)
+                Icon(Icons.Outlined.ExpandMore, null, Modifier.size(18.dp))
             }
             DropdownMenu(tablesOpen, { tablesOpen = false }) {
                 listOf("Counter 01", "Table 01", "Table 02", "Table 03", "Takeaway").forEach { table ->
@@ -119,7 +152,6 @@ private fun CounterHeader(state: PosState, onIntent: (PosIntent) -> Unit, wide: 
             }
         }
     }
-    // Header elements wrap vertically on phones while the tablet keeps the operator and table together.
     if (wide) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) { header() }
     else Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) { header() }
@@ -128,16 +160,28 @@ private fun CounterHeader(state: PosState, onIntent: (PosIntent) -> Unit, wide: 
 @Composable
 private fun MenuPanel(state: PosState, onIntent: (PosIntent) -> Unit, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedTextField(state.query, { onIntent(PosIntent.Search(it)) }, Modifier.fillMaxWidth().testTag("pos_search"),
+        OutlinedTextField(
+            state.query, { onIntent(PosIntent.Search(it)) }, Modifier.fillMaxWidth().testTag("pos_search"),
             placeholder = { Text("Search the menu") }, singleLine = true,
-            leadingIcon = { Icon(Icons.Outlined.Search, null) },
+            leadingIcon = { Icon(Icons.Outlined.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
             trailingIcon = if (state.query.isNotEmpty()) ({ IconButton({ onIntent(PosIntent.Search("")) }) {
                 Icon(Icons.Outlined.Close, "Clear menu search")
-            } }) else null, shape = MaterialTheme.shapes.medium)
+            } }) else null,
+            shape = RoundedCornerShape(20.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+            )
+        )
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(state.categories) { category ->
-                FilterChip(state.category == category, { onIntent(PosIntent.SelectCategory(category)) },
-                    label = { Text(category) }, modifier = Modifier.heightIn(min = 56.dp))
+                FilterChip(
+                    selected = state.category == category,
+                    onClick = { onIntent(PosIntent.SelectCategory(category)) },
+                    label = { Text(category) },
+                    shape = RoundedCornerShape(999.dp),
+                    modifier = Modifier.heightIn(min = 48.dp)
+                )
             }
         }
         if (state.loading) {
@@ -166,32 +210,47 @@ private fun MenuPanel(state: PosState, onIntent: (PosIntent) -> Unit, modifier: 
 @Composable
 private fun PosItemCard(item: MenuItem, justAdded: Boolean, pulse: Int, onAdd: () -> Unit) {
     val colors = MaterialTheme.colorScheme
-    val background = when (item.category) {
-        "Breakfast", "Breads" -> colors.primaryContainer
-        "Starters", "Drinks" -> colors.secondaryContainer
-        else -> colors.tertiaryContainer
-    }
-    val ink = when (item.category) {
-        "Breakfast", "Breads" -> colors.onPrimaryContainer
-        "Starters", "Drinks" -> colors.onSecondaryContainer
-        else -> colors.onTertiaryContainer
-    }
     val scale = remember { Animatable(1f) }
     val motion = MaterialTheme.motionScheme
     LaunchedEffect(pulse) {
         if (justAdded) { scale.snapTo(.94f); scale.animateTo(1f, motion.fastSpatialSpec()) }
     }
-    Surface(onClick = onAdd, Modifier.fillMaxWidth().heightIn(min = 174.dp).graphicsLayer { scaleX = scale.value; scaleY = scale.value }
-        .semantics { contentDescription = "Add ${item.name}, ${formatRupees(item.price)}" },
-        shape = RoundedCornerShape(18.dp), color = background, contentColor = ink,
-        border = BorderStroke(1.dp, colors.outlineVariant)) {
+    Surface(
+        onClick = onAdd,
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 176.dp)
+            .graphicsLayer { scaleX = scale.value; scaleY = scale.value }
+            .semantics { contentDescription = "Add ${item.name}" },
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, if (justAdded) colors.primary else colors.outlineVariant.copy(alpha = 0.35f))
+    ) {
         Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                PosDishArtwork(item, Modifier.size(48.dp))
-                Icon(Icons.Outlined.AddCircleOutline, null, Modifier.size(28.dp))
+                PosDishArtwork(item, Modifier.size(50.dp))
+                Surface(
+                    shape = androidx.compose.foundation.shape.CircleShape,
+                    color = colors.primaryContainer,
+                    modifier = Modifier.size(34.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(Icons.Outlined.Add, null, Modifier.size(18.dp), tint = colors.onPrimaryContainer)
+                    }
+                }
             }
             Text(item.name, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            Text(if (item.isVeg) "Vegetarian" else "Non-vegetarian", style = MaterialTheme.typography.labelSmall)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Surface(
+                    Modifier.size(12.dp),
+                    shape = RoundedCornerShape(3.dp),
+                    border = BorderStroke(1.dp, if (item.isVeg) colors.tertiary else colors.primary),
+                    color = colors.surface
+                ) {
+                    Box(Modifier.padding(2.5.dp).background(if (item.isVeg) colors.tertiary else colors.primary, androidx.compose.foundation.shape.CircleShape))
+                }
+                Text(if (item.isVeg) "Vegetarian" else "Non-vegetarian", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
+            }
             Text(formatRupees(item.price), style = MaterialTheme.typography.titleLarge)
         }
     }
@@ -244,7 +303,7 @@ private fun BillPanel(state: PosState, onIntent: (PosIntent) -> Unit, onCharge: 
     Column(modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text("Running bill", style = MaterialTheme.typography.titleLarge)
-            Text("${state.bill.count} items", style = MaterialTheme.typography.labelLarge)
+            LuxuryBadge("${state.bill.count} items")
         }
         if (state.bill.lines.isEmpty()) {
             Column(Modifier.weight(1f).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally,
@@ -264,12 +323,22 @@ private fun BillPanel(state: PosState, onIntent: (PosIntent) -> Unit, onCharge: 
         LazyRow(Modifier.graphicsLayer { scaleX = discountPulse.value; scaleY = discountPulse.value },
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(listOf(0, 10, 15)) { percent ->
-                FilterChip(state.bill.discountPercent == percent, { onIntent(PosIntent.ApplyDiscount(percent)) },
-                    label = { Text(if (percent == 0) "No discount" else "$percent% off") }, Modifier.heightIn(min = 56.dp))
+                FilterChip(
+                    selected = state.bill.discountPercent == percent,
+                    onClick = { onIntent(PosIntent.ApplyDiscount(percent)) },
+                    label = { Text(if (percent == 0) "No discount" else "$percent% off") },
+                    shape = RoundedCornerShape(999.dp),
+                    modifier = Modifier.heightIn(min = 48.dp)
+                )
             }
         }
         PosTotals(state.bill.totals)
-        Button(onCharge, Modifier.fillMaxWidth().heightIn(min = 64.dp), enabled = state.bill.lines.isNotEmpty() && !state.charging) {
+        Button(
+            onClick = onCharge,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp),
+            shape = RoundedCornerShape(18.dp),
+            enabled = state.bill.lines.isNotEmpty() && !state.charging
+        ) {
             Text("Charge ${formatRupees(state.bill.totals.total)}")
         }
     }
@@ -290,32 +359,39 @@ private fun PosBillRow(line: BillLine, onIntent: (PosIntent) -> Unit, modifier: 
         Column(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(line.item.name, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
-                IconButton({ onIntent(PosIntent.RemoveItem(line.key)) }, Modifier.size(56.dp)) {
+                IconButton({ onIntent(PosIntent.RemoveItem(line.key)) }, Modifier.size(48.dp)) {
                     Icon(Icons.Outlined.DeleteOutline, "Remove ${line.item.name}")
                 }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 QuantityStepper(quantity, { onIntent(PosIntent.ChangeQuantity(line.key, -1)) },
-                    { onIntent(PosIntent.ChangeQuantity(line.key, 1)) }, touchTargetSize = 56.dp)
+                    { onIntent(PosIntent.ChangeQuantity(line.key, 1)) }, touchTargetSize = 48.dp)
                 AnimatedMoney(line.item.price * quantity)
             }
             if (line.notes.isNotEmpty()) Text(line.notes, style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-            HorizontalDivider(Modifier.padding(top = 8.dp))
+            HorizontalDivider(Modifier.padding(top = 8.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
         }
     }
 }
 
 @Composable
 private fun PosTotals(totals: BillTotals) {
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        PosAmountLine("Subtotal", totals.subtotal)
-        PosAmountLine("Discount", -totals.discount)
-        PosAmountLine("Demo GST · 5%", totals.tax)
-        HorizontalDivider(Modifier.padding(vertical = 4.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text("Total", style = MaterialTheme.typography.titleMedium)
-            AnimatedMoney(totals.total)
+    Surface(
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            PosAmountLine("Subtotal", totals.subtotal)
+            PosAmountLine("Discount", -totals.discount)
+            PosAmountLine("Demo GST · 5%", totals.tax)
+            HorizontalDivider(Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("Total", style = MaterialTheme.typography.titleMedium)
+                AnimatedMoney(totals.total)
+            }
         }
     }
 }
@@ -335,15 +411,23 @@ fun PosChargeScreen(state: PosState, onIntent: (PosIntent) -> Unit, onBack: () -
         Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
             Text("This bill is empty", style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.height(16.dp))
-            Button(onBack, Modifier.heightIn(min = 56.dp)) { Text("Back to counter") }
+            Button(onBack, Modifier.heightIn(min = 52.dp), shape = RoundedCornerShape(18.dp)) { Text("Back to counter") }
         }
         return
     }
     Scaffold(bottomBar = {
-        Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+        ) {
             Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 PosTotals(totals)
-                Button({ onIntent(PosIntent.Charge) }, Modifier.fillMaxWidth().heightIn(min = 64.dp), enabled = !state.charging) {
+                Button(
+                    onClick = { onIntent(PosIntent.Charge) },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp),
+                    shape = RoundedCornerShape(18.dp),
+                    enabled = !state.charging
+                ) {
                     Text(if (state.charging) "Recording demo payment…" else "Confirm ${state.payment} · ${formatRupees(totals.total)}")
                 }
             }
@@ -351,25 +435,56 @@ fun PosChargeScreen(state: PosState, onIntent: (PosIntent) -> Unit, onBack: () -
     }, contentWindowInsets = WindowInsets(0, 0, 0, 0)) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(24.dp).testTag("pos_charge"),
             verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            Text("Ready at the counter.", style = MaterialTheme.typography.headlineLarge)
-            Text("Select a payment method. This records a local receipt; no money is collected.",
-                style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                LuxuryBadge("Point of Sale Terminal")
+                Text("Ready at the counter.", style = MaterialTheme.typography.headlineLarge)
+                Text("Select a payment method. This records a local receipt; no money is collected.",
+                    style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 listOf("UPI", "Card", "Cash").forEach { payment ->
-                    Surface(shape = MaterialTheme.shapes.large, color = if (state.payment == payment)
-                        MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow) {
-                        Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).selectable(state.payment == payment,
-                            enabled = !state.charging, role = Role.RadioButton, onClick = { onIntent(PosIntent.SelectPayment(payment)) }).padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            RadioButton(state.payment == payment, null, enabled = !state.charging)
-                            Text(payment, style = MaterialTheme.typography.titleMedium)
+                    val selected = state.payment == payment
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = if (selected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f) else MaterialTheme.colorScheme.surfaceContainerLow,
+                        border = BorderStroke(1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            Modifier.fillMaxWidth().heightIn(min = 60.dp).selectable(
+                                selected = selected,
+                                enabled = !state.charging,
+                                role = Role.RadioButton,
+                                onClick = { onIntent(PosIntent.SelectPayment(payment)) }
+                            ).padding(horizontal = 16.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            RadioButton(selected, null, enabled = !state.charging)
+                            Text(payment, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                            val icon = when (payment) {
+                                "UPI" -> Icons.Outlined.QrCodeScanner
+                                "Card" -> Icons.Outlined.CreditCard
+                                else -> Icons.Outlined.Payments
+                            }
+                            Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
             }
-            Text("${state.bill.table} · ${state.operator}", style = MaterialTheme.typography.labelLarge)
-            (if (state.charging) state.receipt?.lines.orEmpty() else state.bill.lines).forEach { line ->
-                PosAmountLine("${line.item.name} × ${line.quantity}", line.total)
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("${state.bill.table} · ${state.operator}", style = MaterialTheme.typography.titleMedium)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                    (if (state.charging) state.receipt?.lines.orEmpty() else state.bill.lines).forEach { line ->
+                        PosAmountLine("${line.item.name} × ${line.quantity}", line.total)
+                    }
+                }
             }
             Text("Demo GST is 5% after discounts. Each amount is rounded to the nearest rupee.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
@@ -384,7 +499,7 @@ fun PosReceiptScreen(receipt: BillReceipt?, onNewBill: () -> Unit) {
     if (receipt == null) {
         Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
             Text("Start a new counter bill", style = MaterialTheme.typography.headlineMedium)
-            Button(onNewBill, Modifier.heightIn(min = 56.dp)) { Text("Back to counter") }
+            Button(onNewBill, Modifier.heightIn(min = 52.dp), shape = RoundedCornerShape(18.dp)) { Text("Back to counter") }
         }
         return
     }
@@ -409,21 +524,24 @@ fun PosReceiptScreen(receipt: BillReceipt?, onNewBill: () -> Unit) {
         }
         Text("Payment recorded", style = MaterialTheme.typography.headlineLarge,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-        Surface(Modifier.widthIn(max = 560.dp).fillMaxWidth(), shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surfaceContainerLow, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
+        Surface(Modifier.widthIn(max = 560.dp).fillMaxWidth(), shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerLow, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))) {
             Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Text("TECHQUANTUM KITCHEN", style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace)
-                Text(receipt.id, fontFamily = FontFamily.Monospace)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("TECHQUANTUM KITCHEN", style = MaterialTheme.typography.titleMedium, fontFamily = FontFamily.Monospace)
+                    LuxuryBadge("Paid")
+                }
+                Text(receipt.id, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("${receipt.table} · ${receipt.payment} · ${receipt.lines.sumOf { it.quantity }} items",
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
-                HorizontalDivider()
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                 receipt.lines.forEach { line -> PosAmountLine("${line.item.name} × ${line.quantity}", line.total) }
-                HorizontalDivider()
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                 PosTotals(receipt.totals)
             }
         }
         Text("Local showcase receipt. No real payment was taken.", style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Button(onNewBill, Modifier.widthIn(max = 560.dp).fillMaxWidth().heightIn(min = 64.dp)) { Text("Start new bill") }
+        Button(onNewBill, Modifier.widthIn(max = 560.dp).fillMaxWidth().heightIn(min = 60.dp), shape = RoundedCornerShape(18.dp)) { Text("Start new bill") }
     }
 }

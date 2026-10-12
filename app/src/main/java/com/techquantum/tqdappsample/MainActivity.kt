@@ -71,18 +71,27 @@ private fun ShowcaseShell(theme: FashionTheme, darkTheme: Boolean, onTheme: (Fas
     val shell: @Composable () -> Unit = {
         SharedTransitionLayout {
             Scaffold(bottomBar = {
-                NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = .96f)) {
-                    ModuleTab.entries.forEach { tab ->
-                        val scale by animateFloatAsState(if (tab == selectedTab) 1.12f else 1f,
-                            MaterialTheme.motionScheme.fastSpatialSpec(), label = "Tab selection")
-                        NavigationBarItem(selected = tab == selectedTab, onClick = { selectedTab = tab },
-                            icon = { Icon(tab.icon, tab.label, Modifier.graphicsLayer { scaleX = scale; scaleY = scale }) },
-                            label = { Text(tab.label) }, colors = NavigationBarItemDefaults.colors(
-                                selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                                selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                                indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
-                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant))
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.95f),
+                    tonalElevation = 6.dp,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                ) {
+                    NavigationBar(
+                        containerColor = androidx.compose.ui.graphics.Color.Transparent,
+                        tonalElevation = 0.dp
+                    ) {
+                        ModuleTab.entries.forEach { tab ->
+                            val scale by animateFloatAsState(if (tab == selectedTab) 1.14f else 1f,
+                                MaterialTheme.motionScheme.fastSpatialSpec(), label = "Tab selection")
+                            NavigationBarItem(selected = tab == selectedTab, onClick = { selectedTab = tab },
+                                icon = { Icon(tab.icon, tab.label, Modifier.graphicsLayer { scaleX = scale; scaleY = scale }) },
+                                label = { Text(tab.label) }, colors = NavigationBarItemDefaults.colors(
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant))
+                        }
                     }
                 }
             }) { padding ->
