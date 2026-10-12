@@ -48,7 +48,7 @@ fun ShowcaseAppTheme(
 ) {
     CompositionLocalProvider(LocalFashionTheme provides fashionTheme) {
         MaterialExpressiveTheme(
-            colorScheme = if (module == ShowcaseModule.SHOP) fashionTheme.colorScheme(darkTheme) else module.colorScheme(darkTheme),
+            colorScheme = fashionTheme.colorScheme(darkTheme),
             motionScheme = MotionScheme.expressive(),
             typography = FashionTypography,
             shapes = Shapes(extraSmall = RoundedCornerShape(6.dp), small = RoundedCornerShape(12.dp),

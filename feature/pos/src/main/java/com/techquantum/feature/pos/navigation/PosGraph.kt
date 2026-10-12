@@ -2,13 +2,17 @@
 
 package com.techquantum.feature.pos.navigation
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,11 +36,13 @@ fun PosGraph(
     navController: NavHostController,
     onToggleDark: () -> Unit,
     modifier: Modifier = Modifier,
+    onShowThemes: () -> Unit = {},
     viewModel: PosViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val entry by navController.currentBackStackEntryAsState()
     val route = entry?.destination?.route ?: "workspace"
+    val motion = MaterialTheme.motionScheme
     LaunchedEffect(state.receipt?.id, state.charging, route) {
         if (route == "charge" && state.receipt != null && !state.charging) {
             navController.navigate("receipt") { popUpTo("workspace"); launchSingleTop = true }
@@ -52,10 +58,19 @@ fun PosGraph(
                 Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back to counter")
             }
         }, actions = {
+            IconButton(onClick = onShowThemes) { Icon(Icons.Outlined.Palette, "Color palette") }
             IconButton(onToggleDark) { Icon(Icons.Outlined.DarkMode, "Toggle light and dark mode") }
         })
     }) { padding ->
-        NavHost(navController, startDestination = "workspace", modifier = Modifier.padding(padding)) {
+        NavHost(
+            navController = navController,
+            startDestination = "workspace",
+            modifier = Modifier.padding(padding),
+            enterTransition = { androidx.compose.animation.slideInHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeIn(motion.defaultEffectsSpec()) },
+            exitTransition = { androidx.compose.animation.slideOutHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeOut(motion.defaultEffectsSpec()) },
+            popEnterTransition = { androidx.compose.animation.slideInHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeIn(motion.defaultEffectsSpec()) },
+            popExitTransition = { androidx.compose.animation.slideOutHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeOut(motion.defaultEffectsSpec()) },
+        ) {
             composable("workspace") {
                 PosWorkspaceScreen(state, viewModel::accept, onCharge = {
                     viewModel.accept(PosIntent.StartNewBill)

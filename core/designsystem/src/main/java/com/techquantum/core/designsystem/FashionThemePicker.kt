@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -22,6 +23,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.runtime.getValue
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.SheetValue
@@ -52,12 +54,12 @@ fun FashionThemePicker(
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Column(
-            Modifier.fillMaxWidth().heightIn(max = 680.dp)
+            Modifier.fillMaxWidth().fillMaxHeight(0.88f)
                 .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text("Make it yours", style = MaterialTheme.typography.headlineLarge)
-            Text("Five collections. Your kind of style.", style = MaterialTheme.typography.bodyMedium,
+            Text("Select a color palette. Adapts across all modules.", style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = !darkTheme, onClick = { onDarkThemeChanged(false) }, label = { Text("Light") })
@@ -73,12 +75,19 @@ fun FashionThemePicker(
             ) {
                 FashionTheme.entries.forEach { theme ->
                     val selected = theme == selectedTheme
+                    val surfaceColor by androidx.compose.animation.animateColorAsState(
+                        targetValue = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+                        label = "theme_surface_color"
+                    )
+                    val borderColor by androidx.compose.animation.animateColorAsState(
+                        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
+                        label = "theme_border_color"
+                    )
                     Surface(
-                        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+                        color = surfaceColor,
                         contentColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-                        border = BorderStroke(if (selected) 1.5.dp else 1.dp,
-                            if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+                        border = BorderStroke(if (selected) 1.5.dp else 1.dp, borderColor),
                         shadowElevation = if (selected) 2.dp else 0.dp,
                     ) {
                         Row(
@@ -121,7 +130,7 @@ private fun ThemePaletteSwatches() {
                 modifier = Modifier.size(20.dp), shape = CircleShape,
                 color = color, border = BorderStroke(1.dp, colors.outlineVariant.copy(alpha = 0.6f)),
                 shadowElevation = 1.dp,
-            ) { Box(Modifier.background(color)) }
+            ) {}
         }
     }
 }

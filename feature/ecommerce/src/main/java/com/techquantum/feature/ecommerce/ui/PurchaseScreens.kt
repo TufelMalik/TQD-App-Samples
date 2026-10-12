@@ -41,7 +41,7 @@ private fun rupees(amount: Int): String = NumberFormat.getCurrencyInstance(Local
 
 @Composable
 fun EmptyFashionState(title: String, message: String, action: String, onAction: () -> Unit) {
-    Column(Modifier.fillMaxSize().padding(28.dp), verticalArrangement = Arrangement.Center,
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(28.dp), verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally) {
         Icon(Icons.Outlined.ShoppingBag, null, Modifier.size(72.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(24.dp))
@@ -139,6 +139,7 @@ fun CartScreen(state: EcommerceState, onIntent: (EcommerceIntent) -> Unit, onChe
 @Composable
 private fun PurchaseBar(label: String, total: Int, action: String, onAction: () -> Unit, enabled: Boolean = true) {
     Surface(
+        modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
         shadowElevation = 8.dp,
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.96f),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),

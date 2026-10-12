@@ -56,47 +56,54 @@ fun FoodSelectionScreen(
             "Review bill", state.bill.lines.isNotEmpty(), onReview, onActionBarHeightChanged) },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding)) {
-            Column(Modifier.padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                LuxuryBadge("Kitchen Counter & Quick Billing")
-                Text("Fresh choices. Fast billing.", style = MaterialTheme.typography.headlineMedium)
-                Text("Tap to add. Hold an item to choose quantity and preparation notes.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
-                OutlinedTextField(
-                    value = state.query,
-                    onValueChange = { onIntent(BillingIntent.Search(it)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Find food") },
-                    singleLine = true,
-                    shape = RoundedCornerShape(20.dp),
-                    leadingIcon = { Icon(Icons.Outlined.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
-                    trailingIcon = { if (state.query.isNotEmpty()) IconButton({ onIntent(BillingIntent.Search("")) }) {
-                        Icon(Icons.Outlined.Close, "Clear food search")
-                    } },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(156.dp),
+            modifier = Modifier.fillMaxSize().padding(padding).testTag("billing-menu"),
+            contentPadding = PaddingValues(bottom = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
+                Column(Modifier.padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    LuxuryBadge("Kitchen Counter & Quick Billing")
+                    Text("Fresh choices. Fast billing.", style = MaterialTheme.typography.headlineMedium)
+                    Text("Tap to add. Hold an item to choose quantity and preparation notes.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+                    OutlinedTextField(
+                        value = state.query,
+                        onValueChange = { onIntent(BillingIntent.Search(it)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Find food") },
+                        singleLine = true,
+                        shape = RoundedCornerShape(20.dp),
+                        leadingIcon = { Icon(Icons.Outlined.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                        trailingIcon = { if (state.query.isNotEmpty()) IconButton({ onIntent(BillingIntent.Search("")) }) {
+                            Icon(Icons.Outlined.Close, "Clear food search")
+                        } },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        )
                     )
-                )
-            }
-            CategoryRail(state, onIntent)
-            if (state.loading) {
-                LazyVerticalGrid(GridCells.Adaptive(156.dp), Modifier.weight(1f), contentPadding = PaddingValues(20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(4) { SkeletonShimmer(Modifier.fillMaxWidth().height(228.dp)) }
                 }
+            }
+            item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
+                CategoryRail(state, onIntent)
+            }
+            if (state.loading) {
+                items(6) { SkeletonShimmer(Modifier.fillMaxWidth().height(228.dp).padding(horizontal = 8.dp)) }
             } else if (state.visibleItems.isEmpty()) {
-                Column(Modifier.weight(1f).fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center) {
-                    Icon(Icons.Outlined.SearchOff, null, Modifier.size(48.dp))
-                    Text("No food matches", style = MaterialTheme.typography.titleLarge)
-                    TextButton({ onIntent(BillingIntent.Search("")); onIntent(BillingIntent.SelectCategory("All")) }) { Text("Clear filters") }
+                item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
+                    Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center) {
+                        Icon(Icons.Outlined.SearchOff, null, Modifier.size(48.dp))
+                        Text("No food matches", style = MaterialTheme.typography.titleLarge)
+                        TextButton({ onIntent(BillingIntent.Search("")); onIntent(BillingIntent.SelectCategory("All")) }) { Text("Clear filters") }
+                    }
                 }
             } else {
-                LazyVerticalGrid(GridCells.Adaptive(156.dp), Modifier.weight(1f).testTag("billing-menu"),
-                    contentPadding = PaddingValues(20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(state.visibleItems, key = MenuItem::id) { item ->
+                items(state.visibleItems, key = MenuItem::id) { item ->
+                    Box(Modifier.padding(horizontal = 4.dp).animateItem()) {
                         FoodSelectionCard(item, state.bill.lines.firstOrNull { it.key == item.id }?.quantity ?: 0, onIntent)
                     }
                 }
@@ -165,14 +172,15 @@ private fun FoodSelectionCard(item: MenuItem, count: Int, onIntent: (BillingInte
 @Composable
 private fun FoodIndicators(item: MenuItem) {
     val colors = MaterialTheme.colorScheme
+    val vegColor = if (item.isVeg) FoodVegGreen else FoodNonVegBrown
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
         Surface(
             Modifier.size(12.dp),
             shape = RoundedCornerShape(3.dp),
-            border = BorderStroke(1.dp, if (item.isVeg) colors.tertiary else colors.primary),
+            border = BorderStroke(1.dp, vegColor),
             color = colors.surface
         ) {
-            Box(Modifier.padding(2.5.dp).background(if (item.isVeg) colors.tertiary else colors.primary, CircleShape))
+            Box(Modifier.padding(2.5.dp).background(vegColor, CircleShape))
         }
         Text(if (item.isVeg) "Veg" else "Non-veg", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
         Text("·", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
@@ -191,7 +199,7 @@ fun RunningBillScreen(
 ) {
     if (state.bill.lines.isEmpty()) {
         LaunchedEffect(Unit) { onActionBarHeightChanged(0) }
-        Column(Modifier.fillMaxSize().testTag("billing_running_bill").padding(24.dp), verticalArrangement = Arrangement.Center,
+        Column(Modifier.fillMaxSize().testTag("billing_running_bill").verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(Icons.Outlined.ReceiptLong, null, Modifier.size(72.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(16.dp))
@@ -233,7 +241,8 @@ fun RunningBillScreen(
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceContainerLow,
                     shape = RoundedCornerShape(22.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                    modifier = Modifier.animateItem()
                 ) {
                     Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -309,7 +318,7 @@ private fun BillingActionBar(
     onHeightChanged: (Int) -> Unit,
 ) {
     Surface(
-        modifier = Modifier.onSizeChanged { onHeightChanged(it.height) },
+        modifier = Modifier.navigationBarsPadding().onSizeChanged { onHeightChanged(it.height) },
         tonalElevation = 3.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
     ) {
@@ -363,7 +372,7 @@ fun BillPreviewScreen(
     }
     Scaffold(modifier = Modifier.testTag("billing_preview"), bottomBar = {
         Surface(
-            modifier = Modifier.onSizeChanged { onActionBarHeightChanged(it.height) },
+            modifier = Modifier.navigationBarsPadding().onSizeChanged { onActionBarHeightChanged(it.height) },
             tonalElevation = 3.dp,
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
         ) {

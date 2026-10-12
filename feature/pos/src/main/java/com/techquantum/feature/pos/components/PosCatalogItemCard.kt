@@ -31,6 +31,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.techquantum.core.billingengine.MenuItem
+import com.techquantum.core.designsystem.FoodVegGreen
+import com.techquantum.core.designsystem.FoodNonVegBrown
 import com.techquantum.core.designsystem.formatRupees
 import com.techquantum.core.designsystem.theme.TQDDimensions
 
@@ -77,15 +79,15 @@ fun PosCatalogItemCard(
                     }
                 }
             }
-            Text(item.name, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            val vegColor = if (item.isVeg) FoodVegGreen else FoodNonVegBrown
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Surface(
                     Modifier.size(12.dp),
                     shape = RoundedCornerShape(3.dp),
-                    border = BorderStroke(1.dp, if (item.isVeg) colors.tertiary else colors.primary),
+                    border = BorderStroke(1.dp, vegColor),
                     color = colors.surface,
                 ) {
-                    Box(Modifier.padding(2.5.dp).background(if (item.isVeg) colors.tertiary else colors.primary, CircleShape))
+                    Box(Modifier.padding(2.5.dp).background(vegColor, CircleShape))
                 }
                 Text(if (item.isVeg) "Vegetarian" else "Non-vegetarian", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
             }

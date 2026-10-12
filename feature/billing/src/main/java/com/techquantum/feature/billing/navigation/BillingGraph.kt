@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.ReceiptLong
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,6 +31,7 @@ fun BillingGraph(
     navController: NavHostController,
     onToggleDark: () -> Unit,
     modifier: Modifier = Modifier,
+    onShowThemes: () -> Unit = {},
 ) {
     val viewModel: BillingViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -55,15 +57,22 @@ fun BillingGraph(
                     Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back")
                 }
             }, actions = {
+                IconButton(onClick = onShowThemes, Modifier.size(56.dp)) { Icon(Icons.Outlined.Palette, "Color palette") }
                 IconButton(onToggleDark, Modifier.size(56.dp)) { Icon(Icons.Outlined.DarkMode, "Toggle light and dark mode") }
                 IconButton({ navController.navigate("running-bill") { launchSingleTop = true } }, Modifier.size(56.dp)) {
                     BadgedBox(badge = { CartBadge(state.bill.count) }) { Icon(Icons.Outlined.ReceiptLong, "Open running bill") }
                 }
             })
         }) { padding ->
-        NavHost(navController, startDestination = "select-food", modifier = Modifier.fillMaxSize().padding(padding),
-            enterTransition = { fadeIn(motion.fastEffectsSpec()) }, exitTransition = { fadeOut(motion.fastEffectsSpec()) },
-            popEnterTransition = { fadeIn(motion.fastEffectsSpec()) }, popExitTransition = { fadeOut(motion.fastEffectsSpec()) }) {
+        NavHost(
+            navController = navController,
+            startDestination = "select-food",
+            modifier = Modifier.fillMaxSize().padding(padding),
+            enterTransition = { androidx.compose.animation.slideInHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeIn(motion.defaultEffectsSpec()) },
+            exitTransition = { androidx.compose.animation.slideOutHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeOut(motion.defaultEffectsSpec()) },
+            popEnterTransition = { androidx.compose.animation.slideInHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeIn(motion.defaultEffectsSpec()) },
+            popExitTransition = { androidx.compose.animation.slideOutHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeOut(motion.defaultEffectsSpec()) },
+        ) {
             composable("select-food") { FoodSelectionScreen(state, viewModel::onIntent,
                 { navController.navigate("running-bill") { launchSingleTop = true } },
                 onActionBarHeightChanged = { actionBarHeightPx = it }) }

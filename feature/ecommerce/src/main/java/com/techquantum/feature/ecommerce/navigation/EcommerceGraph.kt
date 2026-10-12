@@ -92,7 +92,10 @@ fun EcommerceGraph(
                     }
                 },
                 navigationIcon = {
-                    if (route != "discover") IconButton(onClick = { navController.popBackStack() }) {
+                    if (route != "discover") IconButton(onClick = {
+                        if (route == "confirmation") navController.popBackStack("discover", false)
+                        else navController.popBackStack()
+                    }) {
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Go back")
                     }
                 },
@@ -121,8 +124,10 @@ fun EcommerceGraph(
             NavHost(
                 navController = navController,
                 startDestination = "discover",
-                enterTransition = { fadeIn(motion.defaultEffectsSpec()) },
-                exitTransition = { fadeOut(motion.defaultEffectsSpec()) },
+                enterTransition = { androidx.compose.animation.slideInHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeIn(motion.defaultEffectsSpec()) },
+                exitTransition = { androidx.compose.animation.slideOutHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeOut(motion.defaultEffectsSpec()) },
+                popEnterTransition = { androidx.compose.animation.slideInHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeIn(motion.defaultEffectsSpec()) },
+                popExitTransition = { androidx.compose.animation.slideOutHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeOut(motion.defaultEffectsSpec()) },
                 modifier = Modifier.fillMaxSize(),
             ) {
                 composable("discover") {

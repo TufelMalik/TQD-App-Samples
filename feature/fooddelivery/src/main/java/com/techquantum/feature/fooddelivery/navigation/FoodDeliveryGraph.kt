@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Contrast
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -34,6 +35,7 @@ fun FoodDeliveryGraph(
     sharedScope: SharedTransitionScope,
     onToggleDark: () -> Unit,
     modifier: Modifier = Modifier,
+    onShowThemes: () -> Unit = {},
     viewModel: FoodViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -54,6 +56,7 @@ fun FoodDeliveryGraph(
             title = { Text(when (route) { "food/cart" -> "Your food order"; "food/checkout" -> "Guest checkout"; "food/tracking" -> "Follow your meal"; else -> "Neighbourhood kitchens" }, style = MaterialTheme.typography.titleLarge) },
             navigationIcon = { if (route != "food/home") IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Default.ArrowBack, "Go back") } },
             actions = {
+                IconButton(onClick = onShowThemes) { Icon(Icons.Outlined.Palette, "Color palette") }
                 IconButton(onClick = onToggleDark) { Icon(Icons.Default.Contrast, "Toggle dark mode") }
                 if (state.order != null && route != "food/tracking") IconButton(onClick = ::goTracking) { Icon(Icons.Default.LocalShipping, "Track food order") }
                 if (route != "food/tracking") IconButton(onClick = ::goCart) { BadgedBox({ CartBadge(state.cartCount) }) { Icon(Icons.Default.ShoppingBag, "Food cart, ${state.cartCount} items") } }
@@ -61,8 +64,15 @@ fun FoodDeliveryGraph(
         )
     }) { padding ->
         val heroSpring = motion.slowSpatialSpec<Rect>()
-        NavHost(navController, "food/home", Modifier.fillMaxSize().padding(padding),
-            enterTransition = { fadeIn(motion.defaultEffectsSpec()) }, exitTransition = { fadeOut(motion.defaultEffectsSpec()) }) {
+        NavHost(
+            navController = navController,
+            startDestination = "food/home",
+            modifier = Modifier.fillMaxSize().padding(padding),
+            enterTransition = { androidx.compose.animation.slideInHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeIn(motion.defaultEffectsSpec()) },
+            exitTransition = { androidx.compose.animation.slideOutHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeOut(motion.defaultEffectsSpec()) },
+            popEnterTransition = { androidx.compose.animation.slideInHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeIn(motion.defaultEffectsSpec()) },
+            popExitTransition = { androidx.compose.animation.slideOutHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeOut(motion.defaultEffectsSpec()) },
+        ) {
             composable("food/home") {
                 val visibility = this
                 FoodHomeScreen(state, viewModel::accept, { id ->

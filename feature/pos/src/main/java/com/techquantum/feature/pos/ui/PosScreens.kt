@@ -75,7 +75,6 @@ fun PosWorkspaceScreen(state: PosState, onIntent: (PosIntent) -> Unit, onCharge:
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
                     ) { BillPanel(state, onIntent, onCharge) }
                 }
-            } else {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     FilterChip(
                         selected = !showBill,
@@ -92,16 +91,31 @@ fun PosWorkspaceScreen(state: PosState, onIntent: (PosIntent) -> Unit, onCharge:
                         modifier = Modifier.weight(1f).heightIn(min = 52.dp)
                     )
                 }
-                if (showBill) {
-                    BillPanel(state, onIntent, onCharge, Modifier.weight(1f))
-                } else {
-                    MenuPanel(state, onIntent, Modifier.weight(1f))
-                    Button(
-                        onClick = { showBill = true },
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-                        shape = RoundedCornerShape(18.dp)
-                    ) {
-                        Text("Review ${state.bill.count} items · ${formatRupees(state.bill.totals.total)}")
+                AnimatedContent(
+                    targetState = showBill,
+                    transitionSpec = {
+                        if (targetState) {
+                            (slideInHorizontally { it } + fadeIn()).togetherWith(slideOutHorizontally { -it } + fadeOut())
+                        } else {
+                            (slideInHorizontally { -it } + fadeIn()).togetherWith(slideOutHorizontally { it } + fadeOut())
+                        }
+                    },
+                    label = "pos_menu_bill_toggle",
+                    modifier = Modifier.weight(1f)
+                ) { isBill ->
+                    if (isBill) {
+                        BillPanel(state, onIntent, onCharge, Modifier.fillMaxSize())
+                    } else {
+                        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            MenuPanel(state, onIntent, Modifier.weight(1f))
+                            Button(
+                                onClick = { showBill = true },
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
+                                shape = RoundedCornerShape(18.dp)
+                            ) {
+                                Text("Review ${state.bill.count} items · ${formatRupees(state.bill.totals.total)}")
+                            }
+                        }
                     }
                 }
             }
@@ -200,7 +214,9 @@ private fun MenuPanel(state: PosState, onIntent: (PosIntent) -> Unit, modifier: 
                 horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(bottom = 12.dp)) {
                 items(state.filteredCatalog, key = { it.id }) { item ->
-                    PosItemCard(item, state.lastAddedId == item.id, state.addPulse) { onIntent(PosIntent.AddItem(item.id)) }
+                    Box(Modifier.animateItem()) {
+                        PosItemCard(item, state.lastAddedId == item.id, state.addPulse) { onIntent(PosIntent.AddItem(item.id)) }
+                    }
                 }
             }
         }
@@ -210,6 +226,7 @@ private fun MenuPanel(state: PosState, onIntent: (PosIntent) -> Unit, modifier: 
 @Composable
 private fun PosItemCard(item: MenuItem, justAdded: Boolean, pulse: Int, onAdd: () -> Unit) {
     val colors = MaterialTheme.colorScheme
+    val vegColor = if (item.isVeg) FoodVegGreen else FoodNonVegBrown
     val scale = remember { Animatable(1f) }
     val motion = MaterialTheme.motionScheme
     LaunchedEffect(pulse) {
@@ -244,10 +261,10 @@ private fun PosItemCard(item: MenuItem, justAdded: Boolean, pulse: Int, onAdd: (
                 Surface(
                     Modifier.size(12.dp),
                     shape = RoundedCornerShape(3.dp),
-                    border = BorderStroke(1.dp, if (item.isVeg) colors.tertiary else colors.primary),
+                    border = BorderStroke(1.dp, vegColor),
                     color = colors.surface
                 ) {
-                    Box(Modifier.padding(2.5.dp).background(if (item.isVeg) colors.tertiary else colors.primary, androidx.compose.foundation.shape.CircleShape))
+                    Box(Modifier.padding(2.5.dp).background(vegColor, androidx.compose.foundation.shape.CircleShape))
                 }
                 Text(if (item.isVeg) "Vegetarian" else "Non-vegetarian", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
             }
@@ -408,7 +425,7 @@ private fun PosAmountLine(label: String, amount: Int) {
 fun PosChargeScreen(state: PosState, onIntent: (PosIntent) -> Unit, onBack: () -> Unit) {
     val totals = if (state.charging) state.receipt?.totals ?: state.bill.totals else state.bill.totals
     if (state.bill.lines.isEmpty() && state.receipt == null) {
-        Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.Center) {
             Text("This bill is empty", style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.height(16.dp))
             Button(onBack, Modifier.heightIn(min = 52.dp), shape = RoundedCornerShape(18.dp)) { Text("Back to counter") }
@@ -417,6 +434,7 @@ fun PosChargeScreen(state: PosState, onIntent: (PosIntent) -> Unit, onBack: () -
     }
     Scaffold(bottomBar = {
         Surface(
+            modifier = Modifier.navigationBarsPadding(),
             color = MaterialTheme.colorScheme.surfaceContainer,
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
         ) {
@@ -428,7 +446,17 @@ fun PosChargeScreen(state: PosState, onIntent: (PosIntent) -> Unit, onBack: () -
                     shape = RoundedCornerShape(18.dp),
                     enabled = !state.charging
                 ) {
-                    Text(if (state.charging) "Recording demo payment…" else "Confirm ${state.payment} · ${formatRupees(totals.total)}")
+                    if (state.charging) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Text("Recording demo payment…")
+                    } else {
+                        Text("Confirm ${state.payment} · ${formatRupees(totals.total)}")
+                    }
                 }
             }
         }
@@ -497,7 +525,7 @@ fun PosChargeScreen(state: PosState, onIntent: (PosIntent) -> Unit, onBack: () -
 @Composable
 fun PosReceiptScreen(receipt: BillReceipt?, onNewBill: () -> Unit) {
     if (receipt == null) {
-        Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.Center) {
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp), verticalArrangement = Arrangement.Center) {
             Text("Start a new counter bill", style = MaterialTheme.typography.headlineMedium)
             Button(onNewBill, Modifier.heightIn(min = 52.dp), shape = RoundedCornerShape(18.dp)) { Text("Back to counter") }
         }
@@ -542,6 +570,6 @@ fun PosReceiptScreen(receipt: BillReceipt?, onNewBill: () -> Unit) {
         }
         Text("Local showcase receipt. No real payment was taken.", style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Button(onNewBill, Modifier.widthIn(max = 560.dp).fillMaxWidth().heightIn(min = 60.dp), shape = RoundedCornerShape(18.dp)) { Text("Start new bill") }
+        Button(onNewBill, Modifier.widthIn(max = 560.dp).fillMaxWidth().heightIn(min = 60.dp).navigationBarsPadding(), shape = RoundedCornerShape(18.dp)) { Text("Start new bill") }
     }
 }

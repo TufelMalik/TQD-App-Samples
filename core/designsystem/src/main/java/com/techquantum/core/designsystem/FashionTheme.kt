@@ -97,6 +97,10 @@ private val Paper = Color(0xFFFFFFFF)
 private val Black = Color(0xFF000000)
 private val ErrorRed = Color(0xFFB3261E)
 
+/** Semantic dietary colors compliant with FSSAI standards. */
+val FoodVegGreen = Color(0xFF0F8A3C)
+val FoodNonVegBrown = Color(0xFFB53D35)
+
 /** WCAG relative-luminance contrast. Choosing the stronger neutral guarantees >= 4.5:1. */
 internal fun contrastRatio(first: Color, second: Color): Float {
     val firstLuminance = first.luminance()
@@ -114,19 +118,20 @@ private fun onColor(color: Color, preferred: Color? = null): Color = when {
 /** Raise a dark accent's tone while retaining its hue; bright lime/silver anchors stay intact. */
 private fun Color.forDarkSurface(): Color = if (luminance() < 0.35f) lerp(this, Paper, 0.58f) else this
 
-/** Input boundaries need 3:1 against their surface; silver is retained as the tertiary anchor. */
+/** Input boundaries need 3:1 against their surface; safely bounded to prevent runaway execution. */
 private fun Color.asOutlineAgainst(surface: Color): Color {
     if (contrastRatio(this, surface) >= 3f) return this
     val contrastTarget = onColor(surface)
-    return generateSequence(0.05f) { it + 0.05f }
-        .map { fraction -> lerp(this, contrastTarget, fraction.coerceAtMost(1f)) }
-        .first { contrastRatio(it, surface) >= 3f }
+    return (1..20).asSequence()
+        .map { fraction -> lerp(this, contrastTarget, (fraction * 0.05f).coerceAtMost(1f)) }
+        .firstOrNull { contrastRatio(it, surface) >= 3f } ?: contrastTarget
 }
 
 internal fun FashionPalette.toColorScheme(dark: Boolean): ColorScheme {
     val base = if (dark) darkBackground else background
     val surface = if (dark) darkSurface else background
-    val p = if (dark) primary.forDarkSurface() else primary
+    val rawP = if (dark) primary.forDarkSurface() else primary
+    val p = if (!dark && contrastRatio(rawP, surface) < 3.2f) lerp(rawP, Black, 0.65f) else rawP
     val s = if (dark) secondary.forDarkSurface() else secondary
     val t = if (dark) tertiary.forDarkSurface() else tertiary
     val containerMix = if (dark) 0.17f else 0.12f

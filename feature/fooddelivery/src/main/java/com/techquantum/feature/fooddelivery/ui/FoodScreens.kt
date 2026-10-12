@@ -154,7 +154,9 @@ fun FoodHomeScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onRestauran
             state.filteredRestaurants.isEmpty() -> item { FoodEmptyPanel("No kitchens match yet", "Try another cuisine or a shorter search.",
                 "Clear filters", { onIntent(FoodIntent.Search("")); onIntent(FoodIntent.SelectCuisine(Cuisine.ALL)) }) }
             else -> items(state.filteredRestaurants, key = Restaurant::id) { restaurant ->
-                RestaurantCard(restaurant, { onRestaurant(restaurant.id) }, heroModifier(restaurant.id))
+                Box(Modifier.animateItem()) {
+                    RestaurantCard(restaurant, { onRestaurant(restaurant.id) }, heroModifier(restaurant.id))
+                }
             }
         }
         item { Text("A local preview. No restaurant is contacted when you order.", style = MaterialTheme.typography.bodySmall,
@@ -269,8 +271,10 @@ fun RestaurantMenuScreen(restaurant: Restaurant, state: FoodState, onIntent: (Fo
             }
             items(restaurant.dishes.filter { state.menuCategory == null || it.category == state.menuCategory }, key = Dish::id) { dish ->
                 val plain = state.cart.firstOrNull { it.dish.id == dish.id && it.addOns.isEmpty() && it.note.isEmpty() }
-                DishRow(dish, plain?.quantity ?: 0, { onIntent(FoodIntent.AddDish(dish.id)) },
-                    { plain?.let { onIntent(FoodIntent.ChangeQuantity(it.key, -1)) } }, { customDish = dish }, Modifier.padding(horizontal = 20.dp))
+                Box(Modifier.animateItem()) {
+                    DishRow(dish, plain?.quantity ?: 0, { onIntent(FoodIntent.AddDish(dish.id)) },
+                        { plain?.let { onIntent(FoodIntent.ChangeQuantity(it.key, -1)) } }, { customDish = dish }, Modifier.padding(horizontal = 20.dp))
+                }
             }
         }
     }
@@ -334,16 +338,17 @@ fun RestaurantMenuScreen(restaurant: Restaurant, state: FoodState, onIntent: (Fo
 
 @Composable private fun VegLabel(vegetarian: Boolean) {
     val colors = MaterialTheme.colorScheme
+    val vegColor = if (vegetarian) FoodVegGreen else FoodNonVegBrown
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Surface(Modifier.size(14.dp), shape = RoundedCornerShape(4.dp), border = BorderStroke(1.2.dp, if (vegetarian) colors.tertiary else colors.primary), color = colors.surface) {
-            Box(Modifier.padding(3.dp).background(if (vegetarian) colors.tertiary else colors.primary, CircleShape))
+        Surface(Modifier.size(14.dp), shape = RoundedCornerShape(4.dp), border = BorderStroke(1.2.dp, vegColor), color = colors.surface) {
+            Box(Modifier.padding(3.dp).background(vegColor, CircleShape))
         }
         Text(if (vegetarian) "Vegetarian" else "Non-vegetarian", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
     }
 }
 
 @Composable fun FoodEmptyPanel(title: String, description: String, action: String, onAction: () -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Icon(Icons.Default.Restaurant, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(title, style = MaterialTheme.typography.headlineSmall)
         Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -403,6 +408,11 @@ fun FoodCartScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onCheckout:
                     }
                 }
                 item {
+                    val animatedProgress by animateFloatAsState(
+                        targetValue = (state.bill.subtotal / 499f).coerceIn(0f, 1f),
+                        animationSpec = spring(stiffness = Spring.StiffnessLow),
+                        label = "free_delivery_progress"
+                    )
                     if (state.bill.subtotal < 499) {
                         Surface(
                             shape = RoundedCornerShape(18.dp),
@@ -415,7 +425,7 @@ fun FoodCartScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onCheckout:
                                     Text("Add ${formatRupees(499 - state.bill.subtotal)} more for free delivery!", style = MaterialTheme.typography.labelMedium)
                                 }
                                 LinearProgressIndicator(
-                                    progress = { (state.bill.subtotal / 499f).coerceIn(0f, 1f) },
+                                    progress = { animatedProgress },
                                     modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp))
                                 )
                             }
@@ -435,6 +445,7 @@ fun FoodCartScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onCheckout:
                 }
                 items(state.cart, key = FoodLine::key) { line ->
                     Surface(
+                        modifier = Modifier.animateItem(),
                         shape = RoundedCornerShape(22.dp),
                         color = MaterialTheme.colorScheme.surfaceContainerLow,
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
@@ -526,7 +537,7 @@ fun FoodCartScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onCheckout:
 @Composable private fun FoodOrderBar(state: FoodState, action: String, onClick: () -> Unit, enabled: Boolean = true) {
     val largeType = LocalDensity.current.fontScale > 1.25f
     Surface(
-        Modifier.fillMaxWidth(),
+        Modifier.fillMaxWidth().navigationBarsPadding(),
         color = MaterialTheme.colorScheme.surfaceContainer,
         tonalElevation = 3.dp,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))

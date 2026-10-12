@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -70,41 +71,59 @@ private fun ShowcaseShell(theme: FashionTheme, darkTheme: Boolean, onTheme: (Fas
     val billingNav = rememberNavController()
     val shell: @Composable () -> Unit = {
         SharedTransitionLayout {
-            Scaffold(bottomBar = {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.95f),
-                    tonalElevation = 6.dp,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-                ) {
-                    NavigationBar(
-                        containerColor = androidx.compose.ui.graphics.Color.Transparent,
-                        tonalElevation = 0.dp
+            Scaffold(
+                contentWindowInsets = WindowInsets.navigationBars,
+                bottomBar = {
+                    val containerColor by androidx.compose.animation.animateColorAsState(
+                        targetValue = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.95f),
+                        label = "nav_container_color"
+                    )
+                    Surface(
+                        color = containerColor,
+                        tonalElevation = 6.dp,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                     ) {
-                        ModuleTab.entries.forEach { tab ->
-                            val scale by animateFloatAsState(if (tab == selectedTab) 1.14f else 1f,
-                                MaterialTheme.motionScheme.fastSpatialSpec(), label = "Tab selection")
-                            NavigationBarItem(selected = tab == selectedTab, onClick = { selectedTab = tab },
-                                icon = { Icon(tab.icon, tab.label, Modifier.graphicsLayer { scaleX = scale; scaleY = scale }) },
-                                label = { Text(tab.label) }, colors = NavigationBarItemDefaults.colors(
-                                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant))
+                        NavigationBar(
+                            containerColor = androidx.compose.ui.graphics.Color.Transparent,
+                            tonalElevation = 0.dp
+                        ) {
+                            ModuleTab.entries.forEach { tab ->
+                                val scale by animateFloatAsState(if (tab == selectedTab) 1.14f else 1f,
+                                    MaterialTheme.motionScheme.fastSpatialSpec(), label = "Tab selection")
+                                NavigationBarItem(selected = tab == selectedTab, onClick = { selectedTab = tab },
+                                    icon = { Icon(tab.icon, tab.label, Modifier.graphicsLayer { scaleX = scale; scaleY = scale }) },
+                                    label = { Text(tab.label) }, colors = NavigationBarItemDefaults.colors(
+                                        selectedTextColor = MaterialTheme.colorScheme.primary,
+                                        selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant))
+                            }
                         }
                     }
                 }
-            }) { padding ->
-                val contentModifier = Modifier.fillMaxSize().padding(padding)
-                when (selectedTab) {
-                    ModuleTab.SHOP -> EcommerceGraph(shopNav, this@SharedTransitionLayout, { showThemes = true }, contentModifier)
-                    ModuleTab.FOOD -> FoodDeliveryGraph(foodNav, this@SharedTransitionLayout, { onDark(!darkTheme) }, contentModifier)
-                    ModuleTab.POS -> PosGraph(posNav, { onDark(!darkTheme) }, contentModifier)
-                    ModuleTab.BILLING -> BillingGraph(billingNav, { onDark(!darkTheme) }, contentModifier)
+            ) { padding ->
+                val contentModifier = Modifier.fillMaxSize().padding(bottom = padding.calculateBottomPadding())
+                androidx.compose.animation.AnimatedContent(
+                    targetState = selectedTab,
+                    transitionSpec = {
+                        (androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(220, delayMillis = 60)) +
+                         androidx.compose.animation.scaleIn(initialScale = 0.98f, animationSpec = androidx.compose.animation.core.tween(220, delayMillis = 60)))
+                        .togetherWith(androidx.compose.animation.fadeOut(animationSpec = androidx.compose.animation.core.tween(150)))
+                    },
+                    label = "ModuleTabChange",
+                    modifier = Modifier.fillMaxSize()
+                ) { tab ->
+                    when (tab) {
+                        ModuleTab.SHOP -> EcommerceGraph(shopNav, this@SharedTransitionLayout, { showThemes = true }, contentModifier)
+                        ModuleTab.FOOD -> FoodDeliveryGraph(foodNav, this@SharedTransitionLayout, { onDark(!darkTheme) }, contentModifier, onShowThemes = { showThemes = true })
+                        ModuleTab.POS -> PosGraph(posNav, { onDark(!darkTheme) }, contentModifier, onShowThemes = { showThemes = true })
+                        ModuleTab.BILLING -> BillingGraph(billingNav, { onDark(!darkTheme) }, contentModifier, onShowThemes = { showThemes = true })
+                    }
                 }
             }
         }
-        if (showThemes && selectedTab == ModuleTab.SHOP) FashionThemePicker(theme, darkTheme, onTheme, onDark, { showThemes = false })
+        if (showThemes) FashionThemePicker(theme, darkTheme, onTheme, onDark, { showThemes = false })
     }
     ShowcaseAppTheme(when (selectedTab) {
         ModuleTab.SHOP -> ShowcaseModule.SHOP

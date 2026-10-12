@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -540,73 +541,71 @@ fun ProductListingScreen(
     var showFilters by rememberSaveable { mutableStateOf(false) }
     val motion = MaterialTheme.motionScheme
     val catalogError = state.error?.takeIf { state.products.isEmpty() && !state.loading }
-    Column(modifier
-        .fillMaxSize()
-        .testTag("product_listing_screen")) {
-        Column(
-            Modifier.padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Text(
-                if (state.category == FashionCategory.ALL) "The whole collection" else "The ${state.category.label.lowercase()} edit",
-                style = MaterialTheme.typography.headlineMedium
-            )
-            CatalogSearch(state.query, { onIntent(EcommerceIntent.Search(it)) })
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+    LazyVerticalGrid(
+        columns = if (state.gridView) GridCells.Adaptive(150.dp) else GridCells.Fixed(1),
+        modifier = modifier
+            .fillMaxSize()
+            .testTag("product_listing_screen"),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp),
+    ) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            Column(
+                Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    "${state.filteredProducts.size} pieces",
-                    Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    if (state.category == FashionCategory.ALL) "The whole collection" else "The ${state.category.label.lowercase()} edit",
+                    style = MaterialTheme.typography.headlineMedium
                 )
-                AssistChip(
-                    onClick = { showFilters = true }, label = { Text("Filter & sort") },
-                    leadingIcon = {
-                        Icon(
-                            Icons.Default.FilterList,
-                            null,
-                            Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    })
-                FilledTonalIconButton(
-                    onClick = { onIntent(EcommerceIntent.ToggleGrid) },
-                    modifier = Modifier.size(48.dp)
+                CatalogSearch(state.query, { onIntent(EcommerceIntent.Search(it)) })
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Icon(
-                        if (state.gridView) Icons.Default.ViewAgenda else Icons.Default.GridView,
-                        if (state.gridView) "Show list view" else "Show grid view"
+                    Text(
+                        "${state.filteredProducts.size} pieces",
+                        Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    AssistChip(
+                        onClick = { showFilters = true }, label = { Text("Filter & sort") },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.FilterList,
+                                null,
+                                Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        })
+                    FilledTonalIconButton(
+                        onClick = { onIntent(EcommerceIntent.ToggleGrid) },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            if (state.gridView) Icons.Default.ViewAgenda else Icons.Default.GridView,
+                            if (state.gridView) "Show list view" else "Show grid view"
+                        )
+                    }
                 }
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(FashionCategory.entries) { category ->
+                        FilterChip(
+                            selected = state.category == category,
+                            onClick = { onIntent(EcommerceIntent.SelectCategory(category)) },
+                            label = { Text(category.label) })
+                    }
+                }
+                HorizontalDivider(
+                    Modifier.padding(top = 8.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .55f)
+                )
             }
         }
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(FashionCategory.entries) { category ->
-                FilterChip(
-                    selected = state.category == category,
-                    onClick = { onIntent(EcommerceIntent.SelectCategory(category)) },
-                    label = { Text(category.label) })
-            }
-        }
-        HorizontalDivider(
-            Modifier.padding(top = 8.dp),
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .55f)
-        )
-        LazyVerticalGrid(
-            columns = if (state.gridView) GridCells.Adaptive(150.dp) else GridCells.Fixed(1),
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            contentPadding = PaddingValues(20.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalArrangement = Arrangement.spacedBy(22.dp),
-        ) {
             if (state.loading) {
                 items(6) { ProductSkeleton(Modifier.fillMaxWidth()) }
             } else if (catalogError != null) {
@@ -667,7 +666,6 @@ fun ProductListingScreen(
                 }
             }
         }
-    }
     if (showFilters) {
         CatalogFilterSheet(state, onIntent, { showFilters = false })
     }
@@ -1038,6 +1036,7 @@ fun ProductDetailScreen(
             }
         }
         Surface(
+            modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
             color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.96f),
             tonalElevation = 6.dp,
             border = BorderStroke(
