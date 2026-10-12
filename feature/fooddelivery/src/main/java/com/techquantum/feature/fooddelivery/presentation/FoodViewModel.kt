@@ -13,8 +13,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
+import com.techquantum.feature.fooddelivery.domain.usecase.GetRestaurantsUseCase
+import com.techquantum.feature.fooddelivery.domain.usecase.PlaceFoodOrderUseCase
+
 @HiltViewModel
-class FoodViewModel @Inject constructor(private val repository: FoodRepository, private val saved: SavedStateHandle) : ViewModel() {
+class FoodViewModel @Inject constructor(
+    private val getRestaurantsUseCase: GetRestaurantsUseCase,
+    private val placeFoodOrderUseCase: PlaceFoodOrderUseCase,
+    private val saved: SavedStateHandle,
+) : ViewModel() {
     private val mutableState = MutableStateFlow(FoodState(
         cart = saved.get<ArrayList<FoodLine>>("food.cart")?.toList().orEmpty(),
         address = saved["food.address"] ?: FoodAddress(), payment = FoodPayment.entries.firstOrNull { it.name == saved.get<String>("food.payment") } ?: FoodPayment.CASH,
@@ -45,7 +52,7 @@ class FoodViewModel @Inject constructor(private val repository: FoodRepository, 
         catalogJob?.cancel()
         catalogJob = viewModelScope.launch {
             mutableState.value = mutableState.value.copy(loading = true, error = null)
-            try { mutableState.value = mutableState.value.copy(restaurants = repository.restaurants(), loading = false) }
+            try { mutableState.value = mutableState.value.copy(restaurants = getRestaurantsUseCase(), loading = false) }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (_: Exception) { mutableState.value = mutableState.value.copy(loading = false, error = "The kitchens couldn't load. Try again.") }
         }
@@ -53,7 +60,7 @@ class FoodViewModel @Inject constructor(private val repository: FoodRepository, 
     private fun place(snapshot: FoodState) = viewModelScope.launch {
         try {
             val restaurant = snapshot.cartRestaurant ?: error("Restaurant unavailable")
-            val order = repository.placeOrder(restaurant, snapshot.cart, snapshot.address, snapshot.payment, snapshot.instructions, snapshot.tip)
+            val order = placeFoodOrderUseCase(restaurant, snapshot.cart, snapshot.address, snapshot.payment, snapshot.instructions, snapshot.tip)
             val next = mutableState.value.copy(cart = emptyList(), placingOrder = false, order = order, trackingStage = TrackingStage.PLACED, trackingSeconds = 0, tip = 0, error = null)
             mutableState.value = next; persist(next); track()
             mutableEffects.emit(FoodEffect.OrderPlaced(order.id))

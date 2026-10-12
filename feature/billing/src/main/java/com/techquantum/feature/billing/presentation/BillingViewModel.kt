@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.techquantum.core.billingengine.BillReceipt
 import com.techquantum.feature.billing.domain.BillingRepository
+import com.techquantum.feature.billing.domain.usecase.ManageRunningBillUseCase
+import com.techquantum.feature.billing.domain.usecase.ProcessBillingOutputUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -19,6 +21,8 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class BillingViewModel @Inject constructor(
     private val repository: BillingRepository,
+    private val manageRunningBillUseCase: ManageRunningBillUseCase,
+    private val processBillingOutputUseCase: ProcessBillingOutputUseCase,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(BillingState(
@@ -50,12 +54,12 @@ class BillingViewModel @Inject constructor(
                 mutableState.update { it.copy(category = intent.category) }
             }
             is BillingIntent.Add -> {
-                repository.add(intent.itemId)
+                manageRunningBillUseCase.addItem(intent.itemId)
                 effectsChannel.trySend(BillingEffect("Added to the running bill"))
             }
-            is BillingIntent.ChangeQuantity -> repository.changeQuantity(intent.itemId, intent.delta)
+            is BillingIntent.ChangeQuantity -> manageRunningBillUseCase.changeQuantity(intent.itemId, intent.delta)
             is BillingIntent.Remove -> {
-                repository.remove(intent.itemId)
+                manageRunningBillUseCase.removeItem(intent.itemId)
                 effectsChannel.trySend(BillingEffect("Item removed. Add it again from the menu."))
             }
             is BillingIntent.Edit -> {
@@ -73,15 +77,15 @@ class BillingViewModel @Inject constructor(
                 if (current.editingExisting) {
                     val existing = repository.state.value.lines.firstOrNull { it.item.id == item.id }
                     if (existing != null) {
-                        repository.changeQuantity(item.id, current.editQuantity - existing.quantity)
-                        repository.updateNotes(item.id, current.editNotes)
-                    } else repository.add(item.id, current.editQuantity, current.editNotes)
-                } else repository.add(item.id, current.editQuantity, current.editNotes)
+                        manageRunningBillUseCase.changeQuantity(item.id, current.editQuantity - existing.quantity)
+                        manageRunningBillUseCase.updateNotes(item.id, current.editNotes)
+                    } else manageRunningBillUseCase.addItem(item.id, current.editQuantity, current.editNotes)
+                } else manageRunningBillUseCase.addItem(item.id, current.editQuantity, current.editNotes)
                 mutableState.update { it.copy(editingItem = null) }
                 effectsChannel.trySend(BillingEffect("${item.name} updated in the bill"))
             }
-            is BillingIntent.ApplyDiscount -> repository.applyDiscount(intent.percent)
-            is BillingIntent.SelectTable -> repository.selectTable(intent.table)
+            is BillingIntent.ApplyDiscount -> manageRunningBillUseCase.applyDiscount(intent.percent)
+            is BillingIntent.SelectTable -> manageRunningBillUseCase.selectTable(intent.table)
             is BillingIntent.SelectPayment -> {
                 savedStateHandle["billingPayment"] = intent.payment
                 mutableState.update { it.copy(payment = intent.payment) }
@@ -100,7 +104,7 @@ class BillingViewModel @Inject constructor(
         mutableState.update { it.copy(output = transition, error = null) }
         viewModelScope.launch {
             try {
-                val receipt = if (repository.state.value.lines.isNotEmpty()) repository.complete(current.payment)
+                val receipt = if (repository.state.value.lines.isNotEmpty()) processBillingOutputUseCase.completeBill(current.payment)
                     else current.previewReceipt ?: error("No receipt to output")
                 savedStateHandle["billingReceipt"] = receipt
                 mutableState.update { it.copy(receipt = receipt) }

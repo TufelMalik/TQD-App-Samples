@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.techquantum.core.billingengine.BillReceipt
 import com.techquantum.feature.pos.domain.PosRepository
+import com.techquantum.feature.pos.domain.usecase.ManagePosBillUseCase
+import com.techquantum.feature.pos.domain.usecase.ProcessPosChargeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.delay
@@ -17,6 +19,8 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class PosViewModel @Inject constructor(
     private val repository: PosRepository,
+    private val managePosBillUseCase: ManagePosBillUseCase,
+    private val processPosChargeUseCase: ProcessPosChargeUseCase,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(PosState(
@@ -39,13 +43,13 @@ class PosViewModel @Inject constructor(
             is PosIntent.Search -> mutableState.update { it.copy(query = intent.query) }
             is PosIntent.SelectCategory -> mutableState.update { it.copy(category = intent.category) }
             is PosIntent.AddItem -> {
-                repository.add(intent.id)
+                managePosBillUseCase.addItem(intent.id)
                 mutableState.update { it.copy(receipt = null, lastAddedId = intent.id, addPulse = it.addPulse + 1, error = null) }
             }
-            is PosIntent.ChangeQuantity -> repository.changeQuantity(intent.id, intent.delta)
-            is PosIntent.RemoveItem -> repository.remove(intent.id)
-            is PosIntent.ApplyDiscount -> repository.applyDiscount(intent.percent)
-            is PosIntent.SelectTable -> repository.selectTable(intent.table)
+            is PosIntent.ChangeQuantity -> managePosBillUseCase.changeQuantity(intent.id, intent.delta)
+            is PosIntent.RemoveItem -> managePosBillUseCase.removeItem(intent.id)
+            is PosIntent.ApplyDiscount -> managePosBillUseCase.applyDiscount(intent.percent)
+            is PosIntent.SelectTable -> managePosBillUseCase.selectTable(intent.table)
             is PosIntent.SelectPayment -> mutableState.update { it.copy(payment = intent.payment) }
             PosIntent.ClearError -> mutableState.update { it.copy(error = null) }
             PosIntent.StartNewBill -> mutableState.update { it.copy(receipt = null, error = null) }
@@ -55,7 +59,7 @@ class PosViewModel @Inject constructor(
                 } else {
                     // Snapshot synchronously before the animation, so Billing cannot alter this payment.
                     mutableState.update { it.copy(charging = true, error = null) }
-                    val receipt = repository.complete(mutableState.value.payment)
+                    val receipt = processPosChargeUseCase(mutableState.value.payment)
                     savedStateHandle["receipt"] = receipt
                     mutableState.update { it.copy(receipt = receipt, bill = repository.state.value) }
                     viewModelScope.launch { delay(650); mutableState.update { it.copy(charging = false) } }

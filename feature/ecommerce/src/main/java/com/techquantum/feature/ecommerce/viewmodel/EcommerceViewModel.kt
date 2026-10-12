@@ -1,0 +1,5 @@
+package com.techquantum.feature.ecommerce.viewmodel
+
+import com.techquantum.feature.ecommerce.presentation.EcommerceViewModel as PresentationEcommerceViewModel
+
+typealias EcommerceViewModel = PresentationEcommerceViewModel

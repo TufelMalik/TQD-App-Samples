@@ -5,12 +5,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.techquantum.feature.ecommerce.domain.CartItem
-import com.techquantum.feature.ecommerce.domain.EcommerceRepository
 import com.techquantum.feature.ecommerce.domain.FashionCategory
 import com.techquantum.feature.ecommerce.domain.OrderReceipt
 import com.techquantum.feature.ecommerce.domain.PaymentMethod
 import com.techquantum.feature.ecommerce.domain.ProductSort
 import com.techquantum.feature.ecommerce.domain.ShippingAddress
+import com.techquantum.feature.ecommerce.domain.usecase.GetCatalogUseCase
+import com.techquantum.feature.ecommerce.domain.usecase.PlaceOrderUseCase
+import com.techquantum.feature.ecommerce.domain.usecase.ValidateShippingAddressUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -25,7 +27,9 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class EcommerceViewModel @Inject constructor(
-    private val repository: EcommerceRepository,
+    private val getCatalogUseCase: GetCatalogUseCase,
+    private val placeOrderUseCase: PlaceOrderUseCase,
+    private val validateAddressUseCase: ValidateShippingAddressUseCase,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(restoreState())
@@ -64,7 +68,7 @@ class EcommerceViewModel @Inject constructor(
         catalogJob = viewModelScope.launch {
             mutableState.value = mutableState.value.copy(loading = true, error = null)
             try {
-                val products = repository.products()
+                val products = getCatalogUseCase()
                 mutableState.value = mutableState.value.copy(products = products, loading = false)
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -80,7 +84,7 @@ class EcommerceViewModel @Inject constructor(
     private fun placeOrder(snapshot: EcommerceState) {
         viewModelScope.launch {
             try {
-                val receipt = repository.placeOrder(snapshot.cart, snapshot.address, snapshot.payment)
+                val receipt = placeOrderUseCase(snapshot.cart, snapshot.address, snapshot.payment)
                 val next = mutableState.value.copy(
                     placingOrder = false,
                     order = receipt,

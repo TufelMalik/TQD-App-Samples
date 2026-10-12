@@ -1,5 +1,6 @@
 package com.techquantum.core.billingengine
 
+import com.techquantum.core.billingengine.domain.repository.IBillRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -8,13 +9,13 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /** One local bill shared by POS and Billing. Synchronized mutations keep receipt IDs and totals atomic. */
 @Singleton
-class BillRepository @Inject constructor() {
+class BillRepository @Inject constructor() : IBillRepository {
     private val mutableState = MutableStateFlow(BillState(catalog = BillCatalogue.items))
-    val state: StateFlow<BillState> = mutableState.asStateFlow()
+    override val state: StateFlow<BillState> = mutableState.asStateFlow()
     private var receiptSequence = 1041
 
     @Synchronized
-    fun add(itemId: String, quantity: Int = 1, notes: String = "") {
+    override fun add(itemId: String, quantity: Int, notes: String) {
         val current = mutableState.value
         val item = current.catalog.firstOrNull { it.id == itemId } ?: return
         if (quantity <= 0) return
@@ -32,36 +33,36 @@ class BillRepository @Inject constructor() {
     }
 
     @Synchronized
-    fun changeQuantity(itemId: String, delta: Int) {
+    override fun changeQuantity(itemId: String, delta: Int) {
         mutableState.value = mutableState.value.let { current -> current.copy(lines = current.lines.map {
             if (it.key == itemId) it.copy(quantity = (it.quantity.toLong() + delta).coerceIn(1, 99).toInt()) else it
         }) }
     }
 
     @Synchronized
-    fun remove(itemId: String) {
+    override fun remove(itemId: String) {
         mutableState.value = mutableState.value.let { current -> current.copy(lines = current.lines.filterNot { it.key == itemId }) }
     }
 
     @Synchronized
-    fun updateNotes(itemId: String, notes: String) {
+    override fun updateNotes(itemId: String, notes: String) {
         mutableState.value = mutableState.value.let { current -> current.copy(lines = current.lines.map {
             if (it.key == itemId) it.copy(notes = notes.trim().take(160)) else it
         }) }
     }
 
     @Synchronized
-    fun applyDiscount(percent: Int) {
+    override fun applyDiscount(percent: Int) {
         mutableState.value = mutableState.value.copy(discountPercent = percent.coerceIn(0, 100))
     }
 
     @Synchronized
-    fun selectTable(table: String) {
+    override fun selectTable(table: String) {
         if (table.isNotBlank()) mutableState.value = mutableState.value.copy(table = table.trim().take(40))
     }
 
     @Synchronized
-    fun complete(payment: String): BillReceipt {
+    override fun complete(payment: String): BillReceipt {
         val current = mutableState.value
         check(current.lines.isNotEmpty()) { "Add an item before completing a bill." }
         val receipt = BillReceipt(
@@ -76,7 +77,7 @@ class BillRepository @Inject constructor() {
     }
 
     @Synchronized
-    fun clear() {
+    override fun clear() {
         mutableState.value = mutableState.value.copy(lines = emptyList(), discountPercent = 0, lastReceipt = null)
     }
 }
