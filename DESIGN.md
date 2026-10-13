@@ -30,6 +30,18 @@ components:
 
 # TechQuantum Fashion Showcase
 
+## Approved layout selection — 13 October 2026
+
+The user selected Shop C (Studio Tiles) with a B+C product detail, Food A (Fresh Local) with Menu C and redesigned recommendations, POS C (Table Desk) with Charge discount, and Billing A (Paper Ledger).
+
+Shop discovery now leads with asymmetric collection tiles and a product rail. Detail combines an immersive editorial photo with an anchored information card, side variant/view controls, expandable information and a pill purchase action. Colour/size selections retain their existing cart behavior; the illustration view accurately reflects the selected variant. The bundled editorial photographs are illustrative category images.
+
+Food uses cream/forest green, a photographic campaign, circular cuisine choices and two-column restaurant cards. The menu uses an immersive image and rounded information panel. Recommendations use readable photo cards with separate add/quantity and customization actions; large text uses a single column.
+
+POS is table-first, with a category sidebar and compact item list. At enlarged text, categories become a horizontal strip and table selection scrolls with menu content. Wide workspaces keep the existing single catalogue plus bill pane. Charge shows payment stages and discount choices before the payment method, with totals calculated by the shared billing engine. Billing keeps individual item cards and a centered paper receipt with demo output actions.
+
+Studio is a sixth, optional fashion palette, and the selected design is applied once through a preference revision. Existing five palettes, appearance, reduced motion and business state remain available. New anchors and generated image rendering live in `core/designsystem`; feature code uses semantic colors. Both photographic atlases are bundled for offline rendering, and are cropped at display time without stretching.
+
 ## Overview
 
 The reference is a boutique's seasonal lookbook: expressive garment illustrations, quiet typography and a collection that is easy to explore. This is a product showcase for Indian retail clients on a phone, with local prices in INR and English copy. Home carries the brand expression; checkout uses familiar labelled fields and an itemized summary.

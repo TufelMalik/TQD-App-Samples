@@ -21,8 +21,18 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable fun RestaurantArtwork(restaurant: Restaurant, modifier: Modifier = Modifier) =
-    FoodArtwork(restaurant.artwork, "${restaurant.name}, ${restaurant.cuisine.label} food illustration", modifier)
-@Composable fun DishArtwork(dish: Dish, modifier: Modifier = Modifier) = FoodArtwork(dish.artwork, "${dish.name} illustration", modifier)
+    com.techquantum.core.designsystem.EditorialArtwork(false, foodPhotoCell(restaurant.artwork), "${restaurant.name}, editorial food imagery", modifier)
+@Composable fun DishArtwork(dish: Dish, modifier: Modifier = Modifier) =
+    com.techquantum.core.designsystem.EditorialArtwork(false, foodPhotoCell(dish.artwork), "${dish.name}, editorial food imagery", modifier)
+
+private fun foodPhotoCell(art: FoodArt): Int = when (art) {
+    FoodArt.THALI -> 0
+    FoodArt.DOSA -> 1
+    FoodArt.PIZZA -> 2
+    FoodArt.BOWL, FoodArt.WRAP -> 3
+    FoodArt.DESSERT -> 4
+    FoodArt.DRINK -> 5
+}
 
 /** Plates and ingredients are rendered locally; no image request is needed during the pitch. */
 @Composable private fun FoodArtwork(art: FoodArt, description: String, modifier: Modifier) {

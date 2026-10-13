@@ -29,6 +29,17 @@ import kotlin.math.sin
 /** Offline counter-menu illustrations, drawn entirely from the active module's semantic tokens. */
 @Composable
 fun BillingFoodArtwork(item: MenuItem, modifier: Modifier = Modifier) {
+    com.techquantum.core.designsystem.EditorialArtwork(false, when (item.category) {
+        "Breakfast", "Breads" -> 1
+        "Starters" -> 3
+        "Desserts" -> 4
+        "Drinks" -> 5
+        else -> 0
+    }, "${item.name}, editorial food imagery", modifier)
+}
+
+@Composable
+private fun IllustratedBillingFood(item: MenuItem, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     Canvas(modifier.semantics { contentDescription = "${item.name} illustration" }) {
         val centre = Offset(size.width / 2f, size.height / 2f)

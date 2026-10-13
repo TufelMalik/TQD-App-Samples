@@ -37,6 +37,7 @@ class ShowcaseModulesFlowTest {
         compose.onNodeWithTag("food_home").assertIsDisplayed()
         waitForText("Surati Rasoi")
         compose.onNodeWithText("Surati Rasoi").performScrollTo().performClick()
+        compose.onNodeWithTag("food_menu_list").performScrollToIndex(3)
         compose.onNodeWithTag("food_menu").assertIsDisplayed()
         compose.onNodeWithText("Surati Special Thali").performScrollTo().assertIsDisplayed()
         compose.onAllNodesWithText("Customise")[0].performClick()
@@ -51,6 +52,7 @@ class ShowcaseModulesFlowTest {
         compose.onNodeWithText("Place order").performClick()
         compose.waitUntil(8_000) { compose.onAllNodesWithTag("food_tracking").fetchSemanticsNodes().isNotEmpty() }
         repeat(3) {
+            compose.onNodeWithTag("food_tracking").performScrollToIndex(3)
             val preview = compose.onAllNodesWithText("Preview next update")
             if (preview.fetchSemanticsNodes().isNotEmpty()) preview[0].performScrollTo().performClick()
         }
@@ -62,6 +64,7 @@ class ShowcaseModulesFlowTest {
         compose.onNodeWithText("Food").performClick()
         waitForText("Surati Rasoi")
         compose.onNodeWithText("Surati Rasoi").performScrollTo().performClick()
+        compose.onNodeWithTag("food_menu_list").performScrollToIndex(3)
         compose.onAllNodesWithText("Customise")[0].performClick()
         compose.onNodeWithText("Extra paneer").performScrollTo().performClick()
         compose.onNodeWithText("Note for the kitchen").performScrollTo().performTextInput("Less spice")
@@ -104,7 +107,27 @@ class ShowcaseModulesFlowTest {
     }
 
     private fun waitForText(text: String) {
+        if (text == "Surati Rasoi") compose.onNodeWithTag("food_home").performScrollToIndex(6)
         compose.waitUntil(8_000) { compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
+    }
+
+    @Test
+    fun chargeDiscountUpdatesTheTotalAndSharedBillingState() {
+        compose.onNodeWithText("POS").performClick()
+        waitForDescription("Add Masala Dosa")
+        compose.onNodeWithContentDescription("Add Masala Dosa").performScrollTo().performClick()
+        compose.onNodeWithText("Charge ₹126").performClick()
+        compose.onNodeWithTag("charge_discount_10").performScrollTo().performClick()
+        compose.onNodeWithText("Confirm UPI · ₹113").assertIsDisplayed()
+        compose.onNodeWithText("Billing").performClick()
+        compose.onNodeWithContentDescription("Open running bill").performClick()
+        compose.onNodeWithTag("billing_running_list").performScrollToIndex(4)
+        compose.onNodeWithText("Discount (10%)").performScrollTo().assertExists()
+        compose.onNodeWithText("Preview receipt").performClick()
+        compose.onNodeWithText("₹113").assertExists()
+        compose.onNodeWithText("POS").performClick()
+        compose.onNodeWithText("Confirm UPI · ₹113").performClick()
+        compose.waitUntil(8_000) { compose.onAllNodesWithTag("pos_receipt").fetchSemanticsNodes().isNotEmpty() }
     }
 
     private fun waitForDescription(description: String) {

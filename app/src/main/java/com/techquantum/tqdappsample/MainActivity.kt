@@ -74,6 +74,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val preferences = getSharedPreferences("fashion_showcase", MODE_PRIVATE)
+        if (preferences.getInt("selected_design_revision", 0) < 2) {
+            preferences.edit {
+                putString("palette_SHOP", FashionTheme.STUDIO.name)
+                listOf("FOOD", "POS", "BILLING").forEach { putString("palette_$it", "DEFAULT") }
+                putInt("selected_design_revision", 2)
+            }
+        }
         setContent {
             val systemDark = isSystemInDarkTheme()
             var appearance by rememberSaveable { mutableStateOf(AppearanceMode.restore(preferences.getString("appearance", null),

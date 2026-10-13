@@ -14,6 +14,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performTextInput
 import com.techquantum.core.designsystem.FashionStoreTheme
 import com.techquantum.core.designsystem.FashionTheme
@@ -120,14 +121,15 @@ class CatalogScreensTest {
             }
         }
 
-        compose.onNodeWithText("Colour: Maroon").performScrollTo()
+        compose.onNodeWithTag("product_detail_list").performScrollToIndex(1)
         compose.onNodeWithText("Ivory").performClick()
-        compose.onNodeWithContentDescription("Size L").performClick()
+        compose.onNodeWithTag("product_size_heading").performScrollTo()
+        compose.onNodeWithContentDescription("Size L").performScrollTo().performClick()
         compose.onNodeWithContentDescription("Size XS, unavailable").assertIsNotEnabled()
         FashionTheme.entries.forEach { nextTheme ->
             listOf(false, true).forEach { nextDark ->
                 compose.runOnIdle { theme = nextTheme; dark = nextDark }
-                compose.onNodeWithText("Ivory / L · Ready to add").assertIsDisplayed()
+                compose.onNodeWithContentDescription("Size L").assertIsSelected()
                 compose.onNodeWithText("Add to bag").assertIsDisplayed()
             }
         }

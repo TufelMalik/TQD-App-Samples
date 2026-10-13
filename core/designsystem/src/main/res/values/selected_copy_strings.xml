@@ -1,0 +1,14 @@
+<resources>
+    <string name="selected_copy_1">Restaurant or cuisine</string>
+    <string name="selected_copy_2">A local preview. No restaurant is contacted when you order.</string>
+    <string name="selected_copy_3">Where shall we deliver?</string>
+    <string name="selected_copy_4">5% GST, ₹5 platform fee. Delivery ₹29, free from ₹499.</string>
+    <string name="selected_copy_5">All dishes</string>
+    <string name="selected_copy_6">Customise</string>
+    <string name="selected_copy_7">Back to menu</string>
+    <string name="selected_copy_8">Search the menu</string>
+    <string name="selected_copy_9">No matching dishes</string>
+    <string name="selected_copy_10">Clear filters</string>
+    <string name="selected_copy_11">This bill is empty</string>
+    <string name="selected_copy_12">Back to counter</string>
+</resources>

@@ -21,7 +21,7 @@ class EcommerceFlowTest {
     fun discoverToOrderConfirmation_validatesThenRecordsTheDemoOrder() {
         compose.onNodeWithTag("discover_screen").assertIsDisplayed()
         awaitCatalog()
-        compose.onAllNodesWithText("Explore")[0].performClick()
+        compose.onNodeWithText("Ethnic").performClick()
         compose.onNodeWithTag("product_listing_screen").assertIsDisplayed()
         compose.onNodeWithText("Gulmohar Silk Kurta").performScrollTo().performClick()
         compose.onNodeWithTag("product_detail_screen").assertIsDisplayed()
@@ -49,7 +49,7 @@ class EcommerceFlowTest {
     @Test
     fun changingThemeKeepsTheCurrentRouteAndOtherModuleAccentsSeparate() {
         awaitCatalog()
-        compose.onAllNodesWithText("Explore")[0].performClick()
+        compose.onNodeWithText("Ethnic").performClick()
         compose.onNodeWithContentDescription("Change fashion theme").performClick()
         compose.onNodeWithText("Athleisure Wear").performScrollTo().performClick()
         compose.onNodeWithText("Light", useUnmergedTree = true).performScrollTo().performClick()
@@ -85,6 +85,6 @@ class EcommerceFlowTest {
     }
 
     private fun awaitCatalog() {
-        compose.waitUntil(5_000) { compose.onAllNodesWithText("Explore").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("Ethnic").fetchSemanticsNodes().isNotEmpty() }
     }
 }

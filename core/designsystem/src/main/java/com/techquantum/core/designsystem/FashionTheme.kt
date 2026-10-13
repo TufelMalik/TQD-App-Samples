@@ -61,6 +61,16 @@ enum class FashionTheme(
             ink = Color(0xFF0D0F12),
         ),
     ),
+    STUDIO(
+        brandName = "Studio",
+        displayName = "Studio Tiles",
+        description = "A fresh perspective on your everyday wardrobe",
+        palette = FashionPalette(
+            background = Color(0xFFF1ECFF), darkBackground = Color(0xFF171527),
+            primary = Color(0xFF354AE8), secondary = Color(0xFF7863B1),
+            tertiary = Color(0xFF4A716B), outline = Color(0xFF79738C), ink = Color(0xFF202033),
+        ),
+    ),
     LUXEVA(
         brandName = "Luxeva",
         displayName = "Contemporary Women's Wear — Luxeva",

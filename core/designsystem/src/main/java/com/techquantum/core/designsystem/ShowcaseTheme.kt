@@ -18,18 +18,18 @@ enum class ShowcaseModule { SHOP, FOOD, POS, BILLING }
 
 // Palette anchors are non-composable tokens. Screens and shell controls consume semantic roles.
 private val FoodPalette = FashionPalette(
-    background = Color(0xFFFFF8F0), darkBackground = Color(0xFF1F1A17),
-    primary = Color(0xFFE6472E), secondary = Color(0xFFF6A823),
+    background = Color(0xFFF7F5EB), darkBackground = Color(0xFF171E18),
+    primary = Color(0xFF176647), secondary = Color(0xFF657548),
     tertiary = Color(0xFF3C8A3C), outline = Color(0xFF8C7062), ink = Color(0xFF1F1A17),
 )
 private val PosPalette = FashionPalette(
-    background = Color(0xFFF8FAFC), darkBackground = Color(0xFF12191D),
+    background = Color(0xFFF1F0FB), darkBackground = Color(0xFF12191D),
     primary = Color(0xFF006A67), secondary = Color(0xFF2563EB),
     tertiary = Color(0xFF8B681E), outline = Color(0xFF475569), ink = Color(0xFF182126),
 )
 private val BillingPalette = FashionPalette(
-    background = Color(0xFFF6FBF2), darkBackground = Color(0xFF111A12),
-    primary = Color(0xFF2E6932), secondary = Color(0xFF285F59),
+    background = Color(0xFFF7F5EB), darkBackground = Color(0xFF111A12),
+    primary = Color(0xFF176647), secondary = Color(0xFF285F59),
     tertiary = Color(0xFF88690A), outline = Color(0xFF536653), ink = Color(0xFF18231A),
 )
 private val ModuleSchemes: Map<Pair<ShowcaseModule, Boolean>, ColorScheme> =
@@ -54,7 +54,7 @@ fun ShowcaseAppTheme(
         MaterialExpressiveTheme(
             colorScheme = resolveShowcaseColorScheme(module, fashionTheme, darkTheme, paletteOverride),
             motionScheme = if (reducedMotion) ReducedMotionScheme else MotionScheme.expressive(),
-            typography = if (module == ShowcaseModule.SHOP) FashionTypography else OperationalTypography,
+            typography = if (module == ShowcaseModule.SHOP && fashionTheme != FashionTheme.STUDIO) FashionTypography else OperationalTypography,
             shapes = Shapes(extraSmall = RoundedCornerShape(6.dp), small = RoundedCornerShape(12.dp),
                 medium = RoundedCornerShape(18.dp), large = RoundedCornerShape(24.dp), extraLarge = RoundedCornerShape(32.dp)),
             content = content,

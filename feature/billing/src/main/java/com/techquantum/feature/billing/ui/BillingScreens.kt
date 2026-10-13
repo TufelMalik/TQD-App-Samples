@@ -249,7 +249,7 @@ fun RunningBillScreen(
         bottomBar = { BillingActionBar("Total including demo GST", state.bill.totals.total, "Preview receipt", true,
             onPreview, onActionBarHeightChanged) },
         contentWindowInsets = WindowInsets(0, 0, 0, 0)) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding), contentPadding = PaddingValues(20.dp),
+        LazyColumn(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).testTag("billing_running_list"), contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
@@ -402,10 +402,10 @@ fun BillPreviewScreen(
     }
     Scaffold(modifier = Modifier.testTag("billing_preview"), bottomBar = {
         ActionFooter(onHeightChanged = onActionBarHeightChanged) {
-            Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
                     onClick = { onIntent(BillingIntent.Output(BillingOutput.PRINT)) },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = TQDDimensions.operatorTouchTargetMin),
+                    modifier = Modifier.weight(1f).widthIn(min = 150.dp).heightIn(min = TQDDimensions.operatorTouchTargetMin),
                     shape = RoundedCornerShape(18.dp),
                     enabled = !state.busy
                 ) {
@@ -415,7 +415,7 @@ fun BillPreviewScreen(
                 }
                 OutlinedButton(
                     onClick = { onIntent(BillingIntent.Output(BillingOutput.SHARE)) },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = TQDDimensions.operatorTouchTargetMin),
+                    modifier = Modifier.weight(1f).widthIn(min = 150.dp).heightIn(min = TQDDimensions.operatorTouchTargetMin),
                     shape = RoundedCornerShape(18.dp),
                     enabled = !state.busy,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -431,11 +431,11 @@ fun BillPreviewScreen(
             item {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     Text("Receipt preview", style = MaterialTheme.typography.headlineMedium)
-                    LuxuryBadge("Thermal Print Ready")
+                    LuxuryBadge("Paper Ledger")
                 }
                 Text("Demo output · No printer or payment service connected", color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall)
-                PaperFeedAnimation(state.busy)
+                if (state.busy) PaperFeedAnimation(true)
             }
             if (receipt == null) item {
                 Text("Payment label", style = MaterialTheme.typography.titleSmall)
@@ -456,7 +456,8 @@ fun BillPreviewScreen(
                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                 Surface(
                     modifier = Modifier.widthIn(max = TQDDimensions.receiptMaxWidth).fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    shadowElevation = 3.dp,
                     color = MaterialTheme.colorScheme.surface,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                 ) {
@@ -485,11 +486,9 @@ fun BillPreviewScreen(
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                         BillingTotals(totals, if (receipt == null) state.bill.discountPercent else null, receiptStyle = true)
                         Text("Payment: ${receipt?.payment ?: state.payment}", style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
-                        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                            DemoQrPlaceholder(Modifier.size(84.dp))
-                            Text("UPI QR placeholder", style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace)
-                            Text("Not for payments", style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace)
-                        }
+                        Text("DEMO RECEIPT · No money collected", style = MaterialTheme.typography.labelMedium,
+                            textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(), fontFamily = FontFamily.Monospace)
+
                         Text("Thank you. Come hungry, leave happy.", style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(), fontFamily = FontFamily.Monospace)
                     }

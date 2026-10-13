@@ -5,12 +5,7 @@
 
 package com.techquantum.feature.ecommerce.ui
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,7 +26,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -49,13 +43,11 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AddShoppingCart
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ViewAgenda
@@ -98,14 +90,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.techquantum.core.designsystem.ActionFooter
-import com.techquantum.core.designsystem.AnimatedMoney
 import com.techquantum.core.designsystem.DiscountPill
-import com.techquantum.core.designsystem.LocalFashionTheme
 import com.techquantum.core.designsystem.LuxuryBadge
 import com.techquantum.core.designsystem.RatingPill
 import com.techquantum.core.designsystem.ShowcaseSheet
@@ -127,219 +115,7 @@ fun DiscoverScreen(
     heroModifier: @Composable (String) -> Modifier,
     modifier: Modifier = Modifier,
 ) {
-    val theme = LocalFashionTheme.current
-    val enlargedType = LocalDensity.current.fontScale > 1.15f
-    val catalogError = state.error?.takeIf { state.products.isEmpty() && !state.loading }
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .testTag("discover_screen"),
-        contentPadding = PaddingValues(bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp),
-    ) {
-        item {
-            Column(
-                Modifier.padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                LuxuryBadge(
-                    "Haute Couture · Autumn / Winter '26",
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-                Text("A wardrobe,\nuniquely yours.", style = MaterialTheme.typography.headlineLarge)
-                Text(
-                    theme.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                CatalogSearch(
-                    state.query,
-                    { onIntent(EcommerceIntent.Search(it)) },
-                    { onBrowse(FashionCategory.ALL) })
-            }
-        }
-        if (catalogError != null) {
-            item {
-                CatalogFailurePanel(
-                    catalogError,
-                    { onIntent(EcommerceIntent.Retry) },
-                    Modifier.padding(horizontal = 20.dp)
-                )
-            }
-            return@LazyColumn
-        }
-        item {
-            if (state.loading) {
-                SkeletonShimmer(
-                    Modifier
-                        .padding(horizontal = 20.dp)
-                        .fillMaxWidth()
-                        .height(290.dp)
-                        .clip(RoundedCornerShape(32.dp))
-                )
-            } else {
-                CampaignCarousel(state.products, onBrowse)
-            }
-        }
-        item {
-            Column(
-                Modifier.padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                SectionHeading("Shop your style")
-                if (enlargedType) {
-                    listOf(
-                        FashionCategory.ETHNIC to "For every celebration",
-                        FashionCategory.MEN to "Everyday essentials",
-                        FashionCategory.WOMEN to "A little elegance",
-                        FashionCategory.STREETWEAR to "Make it yours",
-                        FashionCategory.ACTIVE to "Move with ease",
-                    ).forEach { (category, subtitle) ->
-                        CategoryTile(
-                            category,
-                            null,
-                            onBrowse,
-                            Modifier.heightIn(min = 108.dp),
-                            subtitle
-                        )
-                    }
-                } else {
-                    Row(
-                        Modifier.height(214.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        CategoryTile(
-                            FashionCategory.ETHNIC,
-                            state.products.firstOrNull { it.category == FashionCategory.ETHNIC },
-                            onBrowse,
-                            Modifier
-                                .weight(1f)
-                                .fillMaxHeight(),
-                            "For every celebration"
-                        )
-                        Column(
-                            Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            CategoryTile(
-                                FashionCategory.MEN,
-                                null,
-                                onBrowse,
-                                Modifier.weight(1f),
-                                "Everyday essentials"
-                            )
-                            CategoryTile(
-                                FashionCategory.WOMEN,
-                                null,
-                                onBrowse,
-                                Modifier.weight(1f),
-                                "A little elegance"
-                            )
-                        }
-                    }
-                    Row(
-                        Modifier.height(108.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        CategoryTile(
-                            FashionCategory.STREETWEAR,
-                            null,
-                            onBrowse,
-                            Modifier
-                                .weight(1f)
-                                .fillMaxHeight(),
-                            "Make it yours"
-                        )
-                        CategoryTile(
-                            FashionCategory.ACTIVE,
-                            null,
-                            onBrowse,
-                            Modifier
-                                .weight(1f)
-                                .fillMaxHeight(),
-                            "Move with ease"
-                        )
-                    }
-                }
-            }
-        }
-        item {
-            SectionHeading(
-                "For you",
-                "View all",
-                { onBrowse(FashionCategory.ALL) },
-                Modifier.padding(horizontal = 20.dp)
-            )
-        }
-        item {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                if (state.loading) {
-                    items(4) { ProductSkeleton(Modifier.width(178.dp)) }
-                } else {
-                    items(state.products.take(8), key = { it.id }) { product ->
-                        ProductCard(
-                            product,
-                            product.id in state.wishlist,
-                            { onProduct(product.id) },
-                            { onIntent(EcommerceIntent.ToggleWishlist(product.id)) },
-                            heroModifier(product.id),
-                            Modifier.width(178.dp)
-                        )
-                    }
-                }
-            }
-        }
-        item {
-            Surface(
-                Modifier
-                    .padding(horizontal = 20.dp)
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(26.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                border = BorderStroke(
-                    1.dp,
-                    MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.18f)
-                ),
-            ) {
-                Row(
-                    Modifier.padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
-                        modifier = Modifier.size(44.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Default.LocalShipping,
-                                null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        }
-                    }
-                    Column {
-                        Text(
-                            "A good fit, delivered.",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
-                        )
-                        Text(
-                            "Free delivery on orders from ₹1,999",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    }
-                }
-            }
-        }
-    }
+    StudioDiscover(state, onIntent, onBrowse, onProduct, heroModifier, modifier)
 }
 
 @Composable
@@ -764,318 +540,11 @@ fun ProductDetailScreen(
     heroModifier: Modifier,
     modifier: Modifier = Modifier,
 ) {
-    var selectedColor by rememberSaveable(product.id) { mutableStateOf(product.colors.first()) }
-    var selectedSize by rememberSaveable(product.id) {
-        mutableStateOf(product.sizes.firstOrNull { it == "M" } ?: product.sizes.first())
-    }
-    var detailsExpanded by rememberSaveable(product.id) { mutableStateOf(false) }
-    val motion = MaterialTheme.motionScheme
-    val enlargedType = LocalDensity.current.fontScale > 1.25f
-    Column(modifier
-        .fillMaxSize()
-        .testTag("product_detail_screen")) {
-        LazyColumn(
-            Modifier.weight(1f),
-            contentPadding = PaddingValues(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(22.dp)
-        ) {
-            item {
-                Box(Modifier
-                    .padding(horizontal = 20.dp)
-                    .clip(RoundedCornerShape(32.dp))) {
-                    ProductArtwork(
-                        product,
-                        heroModifier
-                            .fillMaxWidth()
-                            .aspectRatio(.94f),
-                        variantIndex = product.colors.indexOf(selectedColor)
-                    )
-                    WishlistButton(
-                        product,
-                        product.id in state.wishlist,
-                        { onIntent(EcommerceIntent.ToggleWishlist(product.id)) },
-                        Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(12.dp)
-                    )
-                    if (product.originalPrice > product.price) {
-                        DiscountPill(
-                            ((product.originalPrice - product.price) * 100) / product.originalPrice,
-                            Modifier
-                                .align(Alignment.BottomStart)
-                                .padding(14.dp)
-                        )
-                    }
-                }
-            }
-            item {
-                Column(
-                    Modifier.padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    LuxuryBadge(
-                        product.subtitle,
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    Text(
-                        product.name,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
-                    )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        RatingPill(product.rating, product.reviewCount)
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        AnimatedMoney(product.price)
-                        Text(
-                            money(product.originalPrice),
-                            style = MaterialTheme.typography.bodyMedium,
-                            textDecoration = TextDecoration.LineThrough,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            "${((product.originalPrice - product.price) * 100) / product.originalPrice}% off",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-                        )
-                    }
-                    Text(
-                        "Inclusive of all taxes",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-            item {
-                Column(
-                    Modifier.padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    AnimatedContent(selectedColor, transitionSpec = {
-                        fadeIn(motion.fastEffectsSpec<Float>()).togetherWith(fadeOut(motion.fastEffectsSpec<Float>()))
-                    }, label = "Colour choice") { color ->
-                        Text(
-                            "Colour: $color",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
-                        )
-                    }
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(product.colors) { color ->
-                            FilterChip(
-                                selected = selectedColor == color,
-                                onClick = { selectedColor = color },
-                                label = { Text(color) },
-                                leadingIcon = if (selectedColor == color) ({
-                                    Icon(
-                                        Icons.Default.CheckCircle,
-                                        null,
-                                        Modifier.size(18.dp)
-                                    )
-                                }) else null,
-                                shape = RoundedCornerShape(999.dp),
-                                modifier = Modifier.heightIn(min = 48.dp)
-                            )
-                        }
-                    }
-                    AnimatedContent(selectedSize, transitionSpec = {
-                        fadeIn(motion.fastEffectsSpec<Float>()).togetherWith(fadeOut(motion.fastEffectsSpec<Float>()))
-                    }, label = "Size choice") { selected ->
-                        Text(
-                            "Size: $selected",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
-                        )
-                    }
-                    val sizes =
-                        if (product.sizes.all { it.toIntOrNull() != null }) product.sizes else listOf(
-                            "XS",
-                            "S",
-                            "M",
-                            "L",
-                            "XL",
-                            "XXL"
-                        )
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(sizes) { size ->
-                            val available = size in product.sizes
-                            FilterChip(
-                                selected = selectedSize == size,
-                                onClick = { selectedSize = size },
-                                enabled = available,
-                                label = {
-                                    Text(
-                                        size,
-                                        textDecoration = if (available) TextDecoration.None else TextDecoration.LineThrough
-                                    )
-                                },
-                                shape = RoundedCornerShape(999.dp),
-                                modifier = Modifier
-                                    .heightIn(min = 48.dp)
-                                    .semantics {
-                                        contentDescription =
-                                            "Size $size${if (available) "" else ", unavailable"}"
-                                    })
-                        }
-                    }
-                    Surface(
-                        shape = RoundedCornerShape(18.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainer,
-                        border = BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-                        )
-                    ) {
-                        AnimatedContent(
-                            selectedColor to selectedSize,
-                            Modifier.fillMaxWidth(),
-                            transitionSpec = {
-                                fadeIn(motion.fastEffectsSpec<Float>()).togetherWith(fadeOut(motion.fastEffectsSpec<Float>()))
-                            },
-                            label = "Selected variant"
-                        ) { (color, size) ->
-                            Row(
-                                Modifier.padding(14.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.CheckCircle,
-                                    null,
-                                    Modifier.size(18.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    "$color / $size · Ready to add",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-            item {
-                Column(
-                    Modifier.padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            "The details",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-                            modifier = Modifier.weight(1f)
-                        )
-                        TextButton(
-                            onClick = { detailsExpanded = !detailsExpanded },
-                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
-                        ) { Text(if (detailsExpanded) "Show less" else "Read more") }
-                    }
-                    Text(
-                        product.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = if (detailsExpanded) Int.MAX_VALUE else 3,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    AnimatedVisibility(
-                        detailsExpanded,
-                        enter = fadeIn(motion.fastEffectsSpec()),
-                        exit = fadeOut(motion.fastEffectsSpec())
-                    ) {
-                        Text(
-                            "Care: gentle wash with similar colours. Dry in shade.\nFit: choose your usual size for the intended silhouette.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.LocalShipping,
-                            null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Column {
-                            Text(
-                                "Delivered in 3–5 days",
-                                style = MaterialTheme.typography.titleSmall
-                            )
-                            Text(
-                                "Free from ₹1,999. Otherwise ₹99.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                    Text(
-                        "Collection illustrations; actual fabric and fit may vary.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-        ActionFooter {
-            val addToBag =
-                { onIntent(EcommerceIntent.AddToCart(product.id, selectedColor, selectedSize)) }
-            val buyNow = { onIntent(EcommerceIntent.AddToCart(product.id, selectedColor, selectedSize, openCart = true)) }
-            if (enlargedType) {
-                Column(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 14.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    AddToBagButton(addToBag, Modifier.fillMaxWidth())
-                    Button(
-                        onClick = buyNow,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 54.dp),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
-                        Text("Buy now", style = MaterialTheme.typography.titleSmall)
-                    }
-                }
-            } else {
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 14.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    AddToBagButton(addToBag, Modifier.weight(1f))
-                    Button(
-                        onClick = buyNow,
-                        modifier = Modifier
-                            .weight(1f)
-                            .heightIn(min = 54.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp)
-                    ) {
-                        Text("Buy now", style = MaterialTheme.typography.titleSmall)
-                    }
-                }
-            }
-        }
-    }
+    StudioProductDetail(product, state, onIntent, onCart, heroModifier, modifier)
 }
 
 @Composable
-private fun CatalogSearch(query: String, onQuery: (String) -> Unit, onSearch: () -> Unit = {}) {
+internal fun CatalogSearch(query: String, onQuery: (String) -> Unit, onSearch: () -> Unit = {}) {
     val keyboard = LocalSoftwareKeyboardController.current
     OutlinedTextField(
         value = query,
@@ -1133,7 +602,7 @@ private fun AddToBagButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SectionHeading(
+internal fun SectionHeading(
     title: String,
     action: String? = null,
     onAction: () -> Unit = {},
@@ -1156,7 +625,7 @@ private fun SectionHeading(
 }
 
 @Composable
-private fun CatalogFailurePanel(
+internal fun CatalogFailurePanel(
     message: String,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
@@ -1201,7 +670,7 @@ private fun CatalogFailurePanel(
 }
 
 @Composable
-private fun ProductCard(
+internal fun ProductCard(
     product: Product,
     saved: Boolean,
     onClick: () -> Unit,
@@ -1220,7 +689,7 @@ private fun ProductCard(
             ),
         ) {
             Box {
-                ProductArtwork(product, heroModifier
+                com.techquantum.core.designsystem.EditorialArtwork(true, editorialCell(product), product.name, heroModifier
                     .fillMaxWidth()
                     .aspectRatio(.77f))
                 WishlistButton(
@@ -1349,7 +818,7 @@ private fun ProductListRow(
 }
 
 @Composable
-private fun WishlistButton(
+internal fun WishlistButton(
     product: Product,
     saved: Boolean,
     onClick: () -> Unit,

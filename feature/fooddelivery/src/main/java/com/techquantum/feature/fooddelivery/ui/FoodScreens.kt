@@ -26,8 +26,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -49,22 +47,14 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.LocalShipping
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.ShoppingBag
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -75,7 +65,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -83,11 +72,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -104,10 +91,8 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -124,19 +109,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.techquantum.core.designsystem.ActionFooter
 import com.techquantum.core.designsystem.AnimatedMoney
-import com.techquantum.core.designsystem.CartBadge
-import com.techquantum.core.designsystem.CompactModuleTitle
 import com.techquantum.core.designsystem.DietaryIndicator
 import com.techquantum.core.designsystem.LocalTQDMotionPolicy
 import com.techquantum.core.designsystem.LuxuryBadge
-import com.techquantum.core.designsystem.PaletteAction
 import com.techquantum.core.designsystem.QuantityStepper
 import com.techquantum.core.designsystem.RatingPill
 import com.techquantum.core.designsystem.ShowcaseSheet
-import com.techquantum.core.designsystem.SkeletonShimmer
 import com.techquantum.core.designsystem.formatRupees
 import com.techquantum.feature.fooddelivery.domain.AddOn
-import com.techquantum.feature.fooddelivery.domain.Cuisine
 import com.techquantum.feature.fooddelivery.domain.Dish
 import com.techquantum.feature.fooddelivery.domain.FoodAddress
 import com.techquantum.feature.fooddelivery.domain.FoodBill
@@ -150,130 +130,7 @@ import com.techquantum.feature.fooddelivery.presentation.FoodState
 @Composable
 fun FoodHomeScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onRestaurant: (String) -> Unit,
     heroModifier: @Composable (String) -> Modifier, modifier: Modifier = Modifier) {
-    var locationPicker by rememberSaveable { mutableStateOf(false) }
-    val keyboard = LocalSoftwareKeyboardController.current
-    val largeType = LocalDensity.current.fontScale > 1.25f
-    LazyColumn(modifier.fillMaxSize().testTag("food_home"), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        item {
-            Surface(
-                onClick = { locationPicker = true },
-                shape = RoundedCornerShape(22.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
-                modifier = Modifier.fillMaxWidth().heightIn(min = 60.dp)
-            ) {
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.size(38.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Default.LocationOn, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                        }
-                    }
-                    Column(Modifier.weight(1f)) {
-                        Text("Deliver to", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(state.deliveryArea, style = MaterialTheme.typography.titleMedium)
-                    }
-                    Icon(Icons.Default.ExpandMore, "Change delivery area", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-        }
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                LuxuryBadge(text = "Local kitchen picks", icon = Icons.Default.AutoAwesome)
-                Text("Good food.\nA good day.", style = MaterialTheme.typography.displaySmall)
-                OutlinedTextField(state.query, { onIntent(FoodIntent.Search(it)) }, Modifier.fillMaxWidth().testTag("food_search"),
-                    label = { Text("Restaurant or cuisine") }, leadingIcon = { Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
-                    trailingIcon = if (state.query.isNotBlank()) ({ IconButton(onClick = { onIntent(FoodIntent.Search("")) }) { Icon(Icons.Default.Close, "Clear food search") } }) else null,
-                    singleLine = true, shape = RoundedCornerShape(22.dp), colors = accessibleFieldColors(),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { keyboard?.hide() }))
-            }
-        }
-        item {
-            Surface(
-                shape = RoundedCornerShape(26.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-            ) {
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(
-                                    MaterialTheme.colorScheme.secondaryContainer,
-                                    MaterialTheme.colorScheme.surfaceContainerHigh
-                                )
-                            )
-                        )
-                        .padding(22.dp)
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        LuxuryBadge("Chef's Selection · Free Delivery > ₹499")
-                        Text("Your lunch break,\nbut better.", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
-                        Text("Free delivery from ₹499. Local kitchens, freshly made.", style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer)
-                    }
-                }
-            }
-        }
-        item {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                    Text("What sounds good?", style = MaterialTheme.typography.titleLarge)
-                }
-                Cuisine.entries.chunked(if (largeType) 2 else 3).forEach { cuisines ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        cuisines.forEach { cuisine ->
-                            FilterChip(
-                                selected = state.cuisine == cuisine,
-                                onClick = { onIntent(FoodIntent.SelectCuisine(cuisine)) },
-                                label = { Text(cuisine.label) },
-                                shape = RoundedCornerShape(999.dp),
-                                modifier = Modifier.weight(1f).heightIn(min = 48.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        item {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                Text("Kitchens near you", style = MaterialTheme.typography.titleLarge)
-                Text("${state.filteredRestaurants.size} available", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-        when {
-            state.loading -> items(3) { SkeletonShimmer(Modifier.fillMaxWidth().height(230.dp)) }
-            state.error != null && state.restaurants.isEmpty() -> item { FoodEmptyPanel("The kitchens couldn't load", state.error,
-                "Try again", { onIntent(FoodIntent.Retry) }) }
-            state.filteredRestaurants.isEmpty() -> item { FoodEmptyPanel("No kitchens match yet", "Try another cuisine or a shorter search.",
-                "Clear filters", { onIntent(FoodIntent.Search("")); onIntent(FoodIntent.SelectCuisine(Cuisine.ALL)) }) }
-            else -> items(state.filteredRestaurants, key = Restaurant::id) { restaurant ->
-                Box(Modifier.animateItem()) {
-                    RestaurantCard(restaurant, { onRestaurant(restaurant.id) }, heroModifier(restaurant.id))
-                }
-            }
-        }
-        item { Text("A local preview. No restaurant is contacted when you order.", style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant) }
-    }
-    if (locationPicker) FoodSheet({ locationPicker = false }) {
-        Text("Where shall we deliver?", style = MaterialTheme.typography.headlineSmall)
-        listOf("Adajan, Surat", "Vesu, Surat", "City Light, Surat", "Pal, Surat").forEach { location ->
-            Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).selectable(state.deliveryArea == location, role = Role.RadioButton,
-                onClick = { onIntent(FoodIntent.SelectLocation(location)); locationPicker = false }), verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(state.deliveryArea == location, null, colors = accessibleRadioColors())
-                Text(location, Modifier.padding(start = 12.dp))
-            }
-        }
-    }
+    FreshFoodHome(state, onIntent, onRestaurant, heroModifier, modifier)
 }
 
 @Composable private fun RestaurantCard(restaurant: Restaurant, onClick: () -> Unit, heroModifier: Modifier) {
@@ -316,73 +173,8 @@ fun FoodHomeScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onRestauran
 fun RestaurantMenuScreen(restaurant: Restaurant, state: FoodState, onIntent: (FoodIntent) -> Unit,
     onBack: () -> Unit, onCart: () -> Unit, onToggleDark: () -> Unit, heroModifier: Modifier, modifier: Modifier = Modifier,
     onShowThemes: () -> Unit = {}) {
-    val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var customDish by remember { mutableStateOf<Dish?>(null) }
-    Scaffold(modifier.nestedScroll(scroll.nestedScrollConnection).testTag("food_menu"), contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = {
-            LargeTopAppBar(title = { CompactModuleTitle(restaurant.name) }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Default.ArrowBack, "Go back") } },
-                actions = {
-                    PaletteAction(onShowThemes)
-                    IconButton(onClick = onCart) { BadgedBox({ CartBadge(state.cartCount) }) { Icon(Icons.Default.ShoppingBag, "Food cart, ${state.cartCount} items") } }
-                }, scrollBehavior = scroll)
-        }, bottomBar = { if (state.cartCount > 0) FoodOrderBar(state, "View order", onCart) }) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding), contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            item {
-                Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    Box {
-                        RestaurantArtwork(restaurant, heroModifier.fillMaxWidth().height(210.dp).clip(RoundedCornerShape(28.dp)))
-                        Surface(
-                            shape = RoundedCornerShape(999.dp),
-                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
-                            modifier = Modifier.align(Alignment.BottomEnd).padding(14.dp)
-                        ) {
-                            RatingPill(rating = restaurant.rating, modifier = Modifier.padding(2.dp))
-                        }
-                    }
-                    Text(restaurant.description, style = MaterialTheme.typography.bodyLarge)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        LuxuryBadge("${restaurant.etaMinutes}–${restaurant.etaMinutes + 5} min")
-                        LuxuryBadge("${restaurant.distanceKm} km away")
-                        LuxuryBadge("${restaurant.reviewCount} reviews")
-                    }
-                    Text("5% GST, ₹5 platform fee. Delivery ₹29, free from ₹499.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-            stickyHeader {
-                Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 3.dp) {
-                    LazyRow(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        item {
-                            FilterChip(
-                                selected = state.menuCategory == null,
-                                onClick = { onIntent(FoodIntent.SelectMenuCategory(null)) },
-                                label = { Text("All dishes") },
-                                shape = RoundedCornerShape(999.dp)
-                            )
-                        }
-                        items(restaurant.dishes.map { it.category }.distinct(), key = { it.name }) { category ->
-                            FilterChip(
-                                selected = state.menuCategory == category,
-                                onClick = { onIntent(FoodIntent.SelectMenuCategory(category)) },
-                                label = { Text(category.label) },
-                                shape = RoundedCornerShape(999.dp)
-                            )
-                        }
-                    }
-                }
-            }
-            if (restaurant.dishes.none { state.menuCategory == null || it.category == state.menuCategory }) item(key = "empty-category") {
-                FoodEmptyPanel("No dishes in this category", "Choose another category to keep exploring.", "Show all dishes", { onIntent(FoodIntent.SelectMenuCategory(null)) })
-            }
-            items(restaurant.dishes.filter { state.menuCategory == null || it.category == state.menuCategory }, key = Dish::id) { dish ->
-                val plain = state.cart.firstOrNull { it.dish.id == dish.id && it.addOns.isEmpty() && it.note.isEmpty() }
-                Box(Modifier.animateItem()) {
-                    DishRow(dish, plain?.quantity ?: 0, { onIntent(FoodIntent.AddDish(dish.id)) },
-                        { plain?.let { onIntent(FoodIntent.ChangeQuantity(it.key, -1)) } }, { customDish = dish }, Modifier.padding(horizontal = 20.dp))
-                }
-            }
-        }
-    }
+    FreshRestaurantMenu(restaurant, state, onIntent, onBack, onCart, heroModifier, modifier, onShowThemes, { customDish = it })
     customDish?.let { dish -> CustomizeDishSheet(dish, emptySet(), "", "Add to order", { customDish = null }) { addOns, note ->
         onIntent(FoodIntent.AddDish(dish.id, addOns, note)); customDish = null
     } }
@@ -418,7 +210,7 @@ fun RestaurantMenuScreen(restaurant: Restaurant, state: FoodState, onIntent: (Fo
     }
 }
 
-@Composable private fun QuickFoodAdd(quantity: Int, onAdd: () -> Unit, onDecrease: () -> Unit, itemName: String) {
+@Composable internal fun QuickFoodAdd(quantity: Int, onAdd: () -> Unit, onDecrease: () -> Unit, itemName: String) {
     val motion = MaterialTheme.motionScheme
     AnimatedContent(quantity > 0, transitionSpec = {
         fadeIn(motion.fastEffectsSpec()).togetherWith(fadeOut(motion.fastEffectsSpec()))
@@ -623,7 +415,7 @@ fun FoodCartScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onCheckout:
         Text(if (free) "Free" else formatRupees(amount), style = MaterialTheme.typography.bodyMedium)
     }
 }
-@Composable private fun FoodOrderBar(state: FoodState, action: String, onClick: () -> Unit, enabled: Boolean = true) {
+@Composable internal fun FoodOrderBar(state: FoodState, action: String, onClick: () -> Unit, enabled: Boolean = true) {
     val largeType = LocalDensity.current.fontScale > 1.25f
     ActionFooter {
         if (largeType) Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {

@@ -87,7 +87,7 @@ class FashionThemeContrastTest {
             assertTrue(theme.colorScheme(true) === theme.darkColorScheme)
             assertTrue(theme.brandName.isNotBlank())
         }
-        assertEquals(5, FashionTheme.entries.size)
+        assertEquals(6, FashionTheme.entries.size)
     }
 
     @Test
@@ -123,9 +123,9 @@ class FashionThemeContrastTest {
     @Test
     fun foodKeepsItsRequestedPaletteAndFashionSwitchesCannotOverrideIt() {
         val food = ShowcaseModule.FOOD.colorScheme(false)
-        assertEquals(Color(0xFFFFF8F0), food.background)
-        assertEquals(Color(0xFFE6472E), food.primary)
-        assertEquals(Color(0xFFF6A823), food.secondary)
+        assertEquals(Color(0xFFF7F5EB), food.background)
+        assertEquals(Color(0xFF176647), food.primary)
+        assertEquals(Color(0xFF657548), food.secondary)
         assertEquals(Color(0xFF3C8A3C), food.tertiary)
         assertEquals(Color(0xFF1F1A17), food.onSurface)
         FashionTheme.entries.forEach { theme ->

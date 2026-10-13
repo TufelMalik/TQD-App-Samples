@@ -1,8 +1,8 @@
 # TechQuantum Fashion Showcase
 
-Offline Kotlin / Jetpack Compose fashion demo. Module 1 is implemented under `:feature:ecommerce`; shared palettes, typography and motion components live in `:core:designsystem`. Hilt provides the in-memory catalogue. The Shop flow has Discover, Listing, Detail, Cart, Checkout and Confirmation; Food, POS and Billing retain independent shell accents as placeholders.
+Offline Kotlin / Jetpack Compose showcase with four functional modules. Shared palettes, typography, editorial assets and motion components live in `:core:designsystem`. Hilt provides the local catalogues. Shop uses Studio Tiles with an immersive product detail; Food uses Fresh Local with a story-style menu; POS uses Table Desk with charge discounts; Billing uses Paper Ledger. All orders, payments, tracking and receipt outputs remain local demos.
 
-Tap the palette icon on any shopping screen to change among Luxury Ethnic Couture, Urban Threads, Streetwear, Athleisure and Luxeva, then choose Light or Dark. Settings persist locally. Search, category, filter/sort, grid/list, wishlist, color/size, quantities and demo checkout are interactive. Artwork is bundled Compose illustration, so the complete showcase works offline.
+Tap the palette icon to switch among Studio Tiles, Luxury Ethnic Couture, Urban Threads, Streetwear, Athleisure and Luxeva, then choose System, Light or Dark. Settings persist locally. Search, categories, filter/sort, grid/list, wishlist, color/size, quantities and demo checkout are interactive. Editorial photo atlases and variant illustrations are bundled, so the complete showcase works offline.
 
 The catalogue has fifteen Indian fashion pieces priced in INR. Prices include GST; delivery is ₹99 below ₹1,999 and complimentary from ₹1,999. Checkout requests demo address fields and never collects payment details. Receipts are local showcase state.
 
