@@ -17,6 +17,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,28 +27,25 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AddShoppingCart
@@ -60,31 +58,27 @@ import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -98,8 +92,8 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -108,7 +102,14 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.techquantum.core.designsystem.*
+import com.techquantum.core.designsystem.ActionFooter
+import com.techquantum.core.designsystem.AnimatedMoney
+import com.techquantum.core.designsystem.DiscountPill
+import com.techquantum.core.designsystem.LocalFashionTheme
+import com.techquantum.core.designsystem.LuxuryBadge
+import com.techquantum.core.designsystem.RatingPill
+import com.techquantum.core.designsystem.ShowcaseSheet
+import com.techquantum.core.designsystem.SkeletonShimmer
 import com.techquantum.feature.ecommerce.domain.FashionCategory
 import com.techquantum.feature.ecommerce.domain.Product
 import com.techquantum.feature.ecommerce.domain.ProductSort
@@ -542,7 +543,7 @@ fun ProductListingScreen(
     val motion = MaterialTheme.motionScheme
     val catalogError = state.error?.takeIf { state.products.isEmpty() && !state.loading }
     LazyVerticalGrid(
-        columns = if (state.gridView) GridCells.Adaptive(150.dp) else GridCells.Fixed(1),
+        columns = if (state.gridView) GridCells.Adaptive(if (LocalDensity.current.fontScale > 1.25f) 240.dp else 150.dp) else GridCells.Fixed(1),
         modifier = modifier
             .fillMaxSize()
             .testTag("product_listing_screen"),
@@ -560,13 +561,12 @@ fun ProductListingScreen(
                     style = MaterialTheme.typography.headlineMedium
                 )
                 CatalogSearch(state.query, { onIntent(EcommerceIntent.Search(it)) })
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                FlowRow(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(
                         "${state.filteredProducts.size} pieces",
-                        Modifier.weight(1f),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -677,17 +677,10 @@ private fun CatalogFilterSheet(
     onIntent: (EcommerceIntent) -> Unit,
     onDismiss: () -> Unit
 ) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss, sheetState = rememberBottomSheetState(
-            initialValue = SheetValue.Hidden,
-            enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded),
-        )
-    ) {
+    ShowcaseSheet(onDismiss) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .heightIn(max = 640.dp)
-                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -1035,18 +1028,10 @@ fun ProductDetailScreen(
                 }
             }
         }
-        Surface(
-            modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
-            color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.96f),
-            tonalElevation = 6.dp,
-            border = BorderStroke(
-                1.dp,
-                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
-            )
-        ) {
+        ActionFooter {
             val addToBag =
                 { onIntent(EcommerceIntent.AddToCart(product.id, selectedColor, selectedSize)) }
-            val buyNow = { addToBag(); onCart() }
+            val buyNow = { onIntent(EcommerceIntent.AddToCart(product.id, selectedColor, selectedSize, openCart = true)) }
             if (enlargedType) {
                 Column(
                     Modifier
@@ -1276,10 +1261,10 @@ private fun ProductCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            Row(
+            FlowRow(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
                     money(product.price),

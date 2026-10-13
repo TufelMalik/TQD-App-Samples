@@ -97,7 +97,7 @@ private val Paper = Color(0xFFFFFFFF)
 private val Black = Color(0xFF000000)
 private val ErrorRed = Color(0xFFB3261E)
 
-/** Semantic dietary colors compliant with FSSAI standards. */
+/** Stable dietary indicator anchors. Legibility also relies on the indicator's label and shape. */
 val FoodVegGreen = Color(0xFF0F8A3C)
 val FoodNonVegBrown = Color(0xFFB53D35)
 

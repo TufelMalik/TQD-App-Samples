@@ -6,33 +6,80 @@ package com.techquantum.feature.ecommerce.ui
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.LocalShipping
+import androidx.compose.material.icons.outlined.ShoppingBag
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.semantics.*
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.techquantum.core.designsystem.ActionFooter
 import com.techquantum.core.designsystem.AnimatedMoney
 import com.techquantum.core.designsystem.QuantityStepper
-import com.techquantum.feature.ecommerce.domain.*
-import com.techquantum.feature.ecommerce.presentation.*
+import com.techquantum.feature.ecommerce.domain.OrderReceipt
+import com.techquantum.feature.ecommerce.domain.PaymentMethod
+import com.techquantum.feature.ecommerce.presentation.EcommerceIntent
+import com.techquantum.feature.ecommerce.presentation.EcommerceState
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -63,7 +110,7 @@ fun CartScreen(state: EcommerceState, onIntent: (EcommerceIntent) -> Unit, onChe
     Scaffold(bottomBar = {
         PurchaseBar("Total · ${state.cartCount} items", state.total, "Continue to checkout", onCheckout)
     }, contentWindowInsets = WindowInsets(0, 0, 0, 0)) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(20.dp),
+        LazyColumn(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding), contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)) {
             item {
                 Text("Good choices, together.", style = MaterialTheme.typography.headlineMedium)
@@ -88,7 +135,7 @@ fun CartScreen(state: EcommerceState, onIntent: (EcommerceIntent) -> Unit, onChe
                         shadowElevation = 1.dp,
                     ) {
                         Row(Modifier.fillMaxWidth().padding(14.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                            ProductArtwork(item.product, Modifier.width(76.dp).height(124.dp))
+                            if (LocalDensity.current.fontScale <= 1.25f) ProductArtwork(item.product, Modifier.width(76.dp).height(124.dp))
                             Column(Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(item.product.name, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
@@ -104,7 +151,7 @@ fun CartScreen(state: EcommerceState, onIntent: (EcommerceIntent) -> Unit, onChe
                                     horizontalArrangement = Arrangement.SpaceBetween) {
                                     QuantityStepper(item.quantity,
                                         { onIntent(EcommerceIntent.ChangeQuantity(item.key, -1)) },
-                                        { onIntent(EcommerceIntent.ChangeQuantity(item.key, 1)) })
+                                        { onIntent(EcommerceIntent.ChangeQuantity(item.key, 1)) }, itemName = item.product.name)
                                 }
                             }
                         }
@@ -138,16 +185,11 @@ fun CartScreen(state: EcommerceState, onIntent: (EcommerceIntent) -> Unit, onChe
 
 @Composable
 private fun PurchaseBar(label: String, total: Int, action: String, onAction: () -> Unit, enabled: Boolean = true) {
-    Surface(
-        modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
-        shadowElevation = 8.dp,
-        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.96f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
-    ) {
+    ActionFooter {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically) {
-                Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 AnimatedMoney(total)
             }
             Spacer(Modifier.height(12.dp))
@@ -182,7 +224,7 @@ private fun OrderTotals(subtotal: Int, delivery: Int, total: Int) {
 @Composable
 private fun TotalLine(label: String, value: String) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+        Text(label, Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
         Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
     }
 }
@@ -197,31 +239,31 @@ fun CheckoutScreen(state: EcommerceState, onIntent: (EcommerceIntent) -> Unit, o
     LaunchedEffect(state.error) {
         if (state.error != null) fields.keys.firstOrNull { it in state.addressErrors }?.let { fields.getValue(it).requestFocus() }
     }
-    Scaffold(modifier = Modifier.imePadding(), bottomBar = {
+    Scaffold(bottomBar = {
         PurchaseBar("Total · all charges included", state.total,
             if (state.placingOrder) "Placing your demo order…" else "Place demo order",
             { onIntent(EcommerceIntent.PlaceOrder) }, enabled = !state.placingOrder)
     }, contentWindowInsets = WindowInsets(0, 0, 0, 0)) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(20.dp),
+        Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).verticalScroll(rememberScrollState()).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)) {
             Text("One last step.", style = MaterialTheme.typography.headlineLarge)
             Text("A showcase checkout. No payment is collected and no order is sent.",
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text("Delivery address", style = MaterialTheme.typography.titleLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
             val address = state.address
-            AddressField("Full name", address.name, state.addressErrors["name"], fields.getValue("name")) {
+            AddressField("Full name", address.name, state.addressErrors["name"], fields.getValue("name"), enabled = !state.placingOrder) {
                 onIntent(EcommerceIntent.UpdateAddress(address.copy(name = it)))
             }
-            AddressField("Mobile number", address.phone, state.addressErrors["phone"], fields.getValue("phone"), KeyboardType.Phone) {
+            AddressField("Mobile number", address.phone, state.addressErrors["phone"], fields.getValue("phone"), KeyboardType.Phone, enabled = !state.placingOrder) {
                 onIntent(EcommerceIntent.UpdateAddress(address.copy(phone = it)))
             }
-            AddressField("House, street and locality", address.line, state.addressErrors["line"], fields.getValue("line")) {
+            AddressField("House, street and locality", address.line, state.addressErrors["line"], fields.getValue("line"), enabled = !state.placingOrder) {
                 onIntent(EcommerceIntent.UpdateAddress(address.copy(line = it)))
             }
-            AddressField("City", address.city, state.addressErrors["city"], fields.getValue("city")) {
+            AddressField("City", address.city, state.addressErrors["city"], fields.getValue("city"), enabled = !state.placingOrder) {
                 onIntent(EcommerceIntent.UpdateAddress(address.copy(city = it)))
             }
-            AddressField("PIN code", address.pinCode, state.addressErrors["pinCode"], fields.getValue("pinCode"), KeyboardType.Number) {
+            AddressField("PIN code", address.pinCode, state.addressErrors["pinCode"], fields.getValue("pinCode"), KeyboardType.Number, enabled = !state.placingOrder, last = true) {
                 onIntent(EcommerceIntent.UpdateAddress(address.copy(pinCode = it)))
             }
             Spacer(Modifier.height(4.dp))
@@ -233,9 +275,8 @@ fun CheckoutScreen(state: EcommerceState, onIntent: (EcommerceIntent) -> Unit, o
                     border = BorderStroke(if (state.payment == method) 1.5.dp else 1.dp,
                         if (state.payment == method) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
                 ) {
-                    Row(Modifier.fillMaxWidth().clickable(role = Role.RadioButton) { onIntent(EcommerceIntent.SelectPayment(method)) }
-                        .semantics { selected = state.payment == method }.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-                        RadioButton(state.payment == method, { onIntent(EcommerceIntent.SelectPayment(method)) },
+                    Row(Modifier.fillMaxWidth().selectable(state.payment == method, enabled = !state.placingOrder, role = Role.RadioButton, onClick = { onIntent(EcommerceIntent.SelectPayment(method)) }).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(state.payment == method, null, enabled = !state.placingOrder,
                             colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.onSurface,
                                 unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant))
                         Column(Modifier.padding(start = 6.dp)) {
@@ -262,16 +303,19 @@ fun CheckoutScreen(state: EcommerceState, onIntent: (EcommerceIntent) -> Unit, o
 
 @Composable
 private fun AddressField(label: String, value: String, error: String?, focus: FocusRequester,
-    keyboardType: KeyboardType = KeyboardType.Text, onChange: (String) -> Unit) {
+    keyboardType: KeyboardType = KeyboardType.Text, enabled: Boolean = true, last: Boolean = false, onChange: (String) -> Unit) {
+    val manager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
     OutlinedTextField(value, onChange, modifier = Modifier.fillMaxWidth().focusRequester(focus),
-        label = { Text(label) }, isError = error != null, singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        label = { Text(label) }, isError = error != null, singleLine = true, enabled = enabled,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = if (last) ImeAction.Done else ImeAction.Next),
+        keyboardActions = KeyboardActions(onNext = { manager.moveFocus(FocusDirection.Next) }, onDone = { keyboard?.hide() }),
         supportingText = if (error != null) ({ Text(error) }) else null,
         shape = RoundedCornerShape(16.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedLabelColor = MaterialTheme.colorScheme.onSurface,
             focusedBorderColor = MaterialTheme.colorScheme.onSurface,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
             cursorColor = MaterialTheme.colorScheme.onSurface))
 }
 

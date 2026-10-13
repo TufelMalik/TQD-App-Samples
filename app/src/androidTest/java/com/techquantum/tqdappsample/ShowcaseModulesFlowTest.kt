@@ -1,13 +1,35 @@
 package com.techquantum.tqdappsample
 
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performTextInput
 import org.junit.Rule
 import org.junit.Test
 
 /** Uses the actual Activity and Hilt graph to verify cross-feature state and local side effects. */
 class ShowcaseModulesFlowTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+
+    @Test fun unmatchedFoodSearchKeepsTheScreenAndOffersClearFilters() {
+        compose.onNodeWithText("Food").performClick()
+        compose.onNodeWithTag("food_search").performTextInput("zzzzz")
+        compose.onNodeWithTag("food_search").performImeAction()
+        compose.onNodeWithTag("food_home").performScrollToIndex(5)
+        compose.waitUntil(8_000) { compose.onAllNodesWithText("Clear filters").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Clear filters").performScrollTo().performClick()
+        waitForText("Surati Rasoi")
+        compose.onNodeWithTag("food_home").assertIsDisplayed()
+    }
 
     @Test
     fun foodCustomizationGuestCheckoutAndLiveTracking() {
@@ -33,6 +55,22 @@ class ShowcaseModulesFlowTest {
             if (preview.fetchSemanticsNodes().isNotEmpty()) preview[0].performScrollTo().performClick()
         }
         compose.onNodeWithText("Order something else").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun paletteCanTemporarilyReplaceTheFoodEditorWithoutLosingItsDraft() {
+        compose.onNodeWithText("Food").performClick()
+        waitForText("Surati Rasoi")
+        compose.onNodeWithText("Surati Rasoi").performScrollTo().performClick()
+        compose.onAllNodesWithText("Customise")[0].performClick()
+        compose.onNodeWithText("Extra paneer").performScrollTo().performClick()
+        compose.onNodeWithText("Note for the kitchen").performScrollTo().performTextInput("Less spice")
+        val palettes = compose.onAllNodesWithContentDescription("Color palette")
+        palettes[palettes.fetchSemanticsNodes().lastIndex].performScrollTo().performClick()
+        compose.onNodeWithText("Module default").performScrollTo().performClick()
+        compose.onNodeWithText("Done").performClick()
+        compose.onNodeWithText("Less spice").performScrollTo().assertExists()
+        compose.onNodeWithText("Add to order · ₹289").performScrollTo().assertExists()
     }
 
     @Test

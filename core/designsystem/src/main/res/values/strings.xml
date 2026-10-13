@@ -1,0 +1,26 @@
+<resources>
+    <string name="palette_action">Color palette</string>
+    <string name="theme_title">%1$s colors</string>
+    <string name="theme_scope">%1$s palette only · appearance applies to all modules</string>
+    <string name="theme_default">Module default</string>
+    <string name="appearance_system">System</string>
+    <string name="appearance_light">Light</string>
+    <string name="appearance_dark">Dark</string>
+    <string name="reduce_motion">Reduce motion</string>
+    <string name="theme_done">Done</string>
+    <string name="module_shop">Shop</string>
+    <string name="module_food">Food</string>
+    <string name="module_pos">POS</string>
+    <string name="module_billing">Billing</string>
+    <string name="loading_content">Loading content</string>
+    <string name="decrease_quantity">Decrease quantity</string>
+    <string name="increase_quantity">Increase quantity</string>
+    <string name="decrease_item_quantity">Decrease quantity for %1$s</string>
+    <string name="increase_item_quantity">Increase quantity for %1$s</string>
+    <string name="quantity_value">Quantity %1$d</string>
+    <string name="diet_vegetarian">Vegetarian</string>
+    <string name="diet_non_vegetarian">Non-vegetarian</string>
+    <string name="tracking_current">Current step</string>
+    <string name="tracking_completed">Completed</string>
+    <string name="tracking_upcoming">Upcoming</string>
+</resources>

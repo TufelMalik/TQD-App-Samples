@@ -4,7 +4,6 @@ import com.techquantum.core.billingengine.BillCatalogue
 import com.techquantum.core.billingengine.BillLine
 import com.techquantum.core.billingengine.BillReceipt
 import com.techquantum.core.billingengine.BillState
-import com.techquantum.core.billingengine.BillTotals
 import com.techquantum.feature.pos.domain.PosRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

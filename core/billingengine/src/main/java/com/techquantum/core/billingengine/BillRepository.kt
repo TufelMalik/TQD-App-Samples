@@ -1,11 +1,11 @@
 package com.techquantum.core.billingengine
 
 import com.techquantum.core.billingengine.domain.repository.IBillRepository
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /** One local bill shared by POS and Billing. Synchronized mutations keep receipt IDs and totals atomic. */
 @Singleton

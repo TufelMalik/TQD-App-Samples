@@ -34,9 +34,9 @@ components:
 
 The reference is a boutique's seasonal lookbook: expressive garment illustrations, quiet typography and a collection that is easy to explore. This is a product showcase for Indian retail clients on a phone, with local prices in INR and English copy. Home carries the brand expression; checkout uses familiar labelled fields and an itemized summary.
 
-The signature is one wardrobe that changes its visual identity live. The palette picker remains available across all six shopping destinations and keeps the cart, selections and address intact. Other showcase tabs retain their own module accents. The attached plan is product evidence; the user's requested scope and five themes take precedence over its original shopping accent.
+The signature is one wardrobe that changes its visual identity live. The palette picker remains available across all six shopping destinations and keeps the cart, selections and address intact. Other tabs retain their own default accents and explicit per-module palette overrides. Appearance and reduced motion are global. The attached plan is product evidence; the user's requested scope and five themes take precedence over its original shopping accent.
 
-Runtime ownership: `core/designsystem/.../FashionTheme.kt` is the canonical palette source. `FashionStoreTheme` maps it to Material color, typography, shape and motion tokens; `LocalFashionTheme` supplies identity copy. This file documents those decisions and the default Luxeva anchors rather than generating a second token system. Feature composables use `MaterialTheme.colorScheme` exclusively.
+Runtime ownership: `core/designsystem/.../FashionTheme.kt` is the canonical palette source. `ShowcaseAppTheme` is the app root and maps the active module/override to Material color, typography, shape and motion tokens; `LocalFashionTheme` supplies identity copy. This file documents those decisions and the default Luxeva anchors rather than generating a second token system. Feature composables use `MaterialTheme.colorScheme` exclusively.
 
 ## Colors
 
@@ -46,15 +46,15 @@ Each solid color owns a contrast-derived `onX` color. Text on surfaces uses `onS
 
 ## Typography
 
-Platform serif at 24–36sp gives campaign copy its lookbook character. Sans serif at 12–20sp carries product information, totals and controls. Fonts are local system families, so the showcase requires no network. Sentence case, visible action labels and localized rupee formatting maintain clarity. Prices use the emphasized title scale.
+Platform serif at 24–36sp gives campaign copy its lookbook character. Sans serif at 12–20sp carries product information, totals and controls. Fonts are local system families, so the showcase requires no network. Sentence case, visible action labels and localized rupee formatting maintain clarity. Prices use the emphasized title scale. Food/POS/Billing use sans operational headings to preserve hierarchy at large text.
 
 ## Layout
 
-Use a 20dp phone gutter, 12–24dp gaps, adaptive listing columns from 150dp, and a bento category composition. Home has one carousel and one product rail. Listing owns its scrolling grid while search/category/filter controls remain visible. Detail, cart and checkout place purchase actions at the bottom above the root navigation bar. Safe-area and keyboard insets keep actions and fields accessible. Cart and checkout own vertical scroll independently.
+Use a 20dp phone gutter, 12–24dp gaps, adaptive listing columns from 150dp, and a bento category composition. Home has one carousel and one product rail. Listing search/category/filter controls scroll in full-span grid items. Food menu categories remain sticky while its app bar collapses. POS compact headers/search/categories scroll with the active pane; only action summaries remain pinned. Enlarged text uses240dp minimum grid cells. Forms constrain to720dp and receipts to560dp. Detail, cart and checkout place purchase actions at the bottom above the root navigation bar. Safe-area and keyboard insets keep actions and fields accessible. Cart and checkout own vertical scroll independently.
 
 ## Elevation & Depth
 
-Use tonal surface layers for cards, with elevation reserved for sticky purchase bars and modal sheets. Navigation has a slightly translucent surface. Product illustrations reserve their aspect ratio during loading and content changes; skeletons match those slots. Avoid blanket gradients or decorative shadows.
+Use tonal surface layers for cards, with elevation reserved for sticky purchase bars and modal sheets. Navigation and ActionFooter use opaque semantic surfaces. Product illustrations reserve their aspect ratio during loading and content changes; skeletons match those slots. Avoid blanket gradients or decorative shadows.
 
 ## Shapes
 
@@ -62,9 +62,9 @@ Controls and chips are pills. Shared containers use Material shapes (12, 18, 24 
 
 ## Components
 
-Shared owners are `FashionThemePicker`, `SkeletonShimmer`, `QuantityStepper`, `AnimatedMoney`, `CartBadge`, Material buttons/chips/fields and the root snackbar. ProductArtwork is a local fashion illustration shared across catalogue/detail/cart. Every icon action has an accessible name; swiping a cart row has a remove-button alternative. Disabled variants remain visible with an unavailable label.
+Shared owners are `ShowcasePalettePicker`, `PaletteAction`, `CompactModuleTitle`, `ShowcaseSheet`, `ActionFooter`, `DietaryIndicator`, `SkeletonShimmer`, `QuantityStepper`, `AnimatedMoney`, `CartBadge`, Material buttons/chips/fields and the root snackbar. ProductArtwork is a local fashion illustration shared across catalogue/detail/cart. Every icon action has an accessible name; swiping a cart row has a remove-button alternative. Disabled variants remain visible with an unavailable label.
 
-Motion uses public `MaterialExpressiveTheme` and `MaterialTheme.motionScheme` spring specs, a single root `SharedTransitionLayout`, shared product artwork, `AnimatedContent` variant/layout/price changes, a bag feedback arc and a drawn confirmation check. Material 3 is pinned to **1.5.0-alpha29** because stable 1.4.0 keeps the requested Expressive APIs internal. Android animation scaling applies through Compose animation clocks; skeleton animation is confined to the short mock first paint.
+Motion uses public `MaterialExpressiveTheme` and `MaterialTheme.motionScheme` spring specs, a single root `SharedTransitionLayout`, shared product artwork, `AnimatedContent` variant/layout/price changes, badge/snackbar acknowledgement and a drawn confirmation check. Material 3 is pinned to **1.5.0-alpha29** because stable 1.4.0 keeps the requested Expressive APIs internal. Android animator scale and an app Reduce motion preference both disable spatial effects and loops; skeletons are static in reduced mode. Existing Material version is retained without a dependency upgrade. See docs/ui-ux-implementation/VALIDATION.md for actual test evidence.
 
 ## Do's and Don'ts
 

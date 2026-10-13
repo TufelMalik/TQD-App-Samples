@@ -4,31 +4,61 @@
 package com.techquantum.feature.ecommerce.navigation
 
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.ShoppingBag
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.*
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.techquantum.core.designsystem.CartBadge
+import com.techquantum.core.designsystem.CompactModuleTitle
+import com.techquantum.core.designsystem.LocalActionFooterHeightChanged
 import com.techquantum.core.designsystem.LocalFashionTheme
+import com.techquantum.core.designsystem.PaletteAction
 import com.techquantum.core.designsystem.SkeletonShimmer
 import com.techquantum.feature.ecommerce.domain.FashionCategory
-import com.techquantum.feature.ecommerce.presentation.*
-import com.techquantum.feature.ecommerce.ui.*
+import com.techquantum.feature.ecommerce.presentation.EcommerceEffect
+import com.techquantum.feature.ecommerce.presentation.EcommerceIntent
+import com.techquantum.feature.ecommerce.presentation.EcommerceViewModel
+import com.techquantum.feature.ecommerce.ui.CartScreen
+import com.techquantum.feature.ecommerce.ui.CheckoutScreen
+import com.techquantum.feature.ecommerce.ui.ConfirmationScreen
+import com.techquantum.feature.ecommerce.ui.DiscoverScreen
+import com.techquantum.feature.ecommerce.ui.EmptyFashionState
+import com.techquantum.feature.ecommerce.ui.ProductDetailScreen
+import com.techquantum.feature.ecommerce.ui.ProductListingScreen
 import kotlinx.coroutines.launch
 
 /** All six destinations share one ViewModel and the shell's root shared transition scope. */
@@ -44,7 +74,8 @@ fun EcommerceGraph(
     val entry by navController.currentBackStackEntryAsState()
     val route = entry?.destination?.route ?: "discover"
     val snackbar = remember { SnackbarHostState() }
-    val flight = remember { Animatable(1f) }
+    var footerHeight by remember(route) { mutableIntStateOf(0) }
+    val footerDp = with(LocalDensity.current) { footerHeight.toDp() }
     val motion = MaterialTheme.motionScheme
     val brand = LocalFashionTheme.current.brandName
     fun goCart() = navController.navigate("cart") { launchSingleTop = true }
@@ -56,7 +87,7 @@ fun EcommerceGraph(
         viewModel.effects.collect { effect ->
             when (effect) {
                 is EcommerceEffect.AddedToCart -> {
-                    launch { flight.snapTo(0f); flight.animateTo(1f, motion.slowSpatialSpec()) }
+                    if (effect.openCart) goCart()
                     launch { snackbar.showSnackbar("${effect.productName} added to your bag") }
                 }
                 is EcommerceEffect.OrderPlaced -> navController.navigate("confirmation") {
@@ -64,6 +95,13 @@ fun EcommerceGraph(
                     launchSingleTop = true
                 }
             }
+        }
+    }
+    LaunchedEffect(state.error, route) {
+        val error = state.error
+        if (error != null && route != "checkout" && state.products.isNotEmpty()) {
+            snackbar.showSnackbar(error)
+            if (viewModel.state.value.error == error) viewModel.accept(EcommerceIntent.ClearError)
         }
     }
     // Recover a completed local checkout if its one-shot effect arrived while another tab was open.
@@ -79,16 +117,14 @@ fun EcommerceGraph(
             CenterAlignedTopAppBar(
                 title = {
                     Column {
-                        Text(when (route) {
+                        CompactModuleTitle(when (route) {
                             "discover" -> brand
                             "listing" -> "The collection"
                             "cart" -> "Your bag"
                             "checkout" -> "Checkout"
                             "confirmation" -> "Order confirmed"
                             else -> "A closer look"
-                        }, style = MaterialTheme.typography.titleLarge)
-                        if (route == "discover") Text("Curated by TechQuantum", style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }, if (route == "discover") "Curated by TechQuantum" else null)
                     }
                 },
                 navigationIcon = {
@@ -100,7 +136,7 @@ fun EcommerceGraph(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onShowThemes) { Icon(Icons.Outlined.Palette, "Change fashion theme") }
+                    PaletteAction(onShowThemes, description = "Change fashion theme")
                     if (route != "confirmation") IconButton(onClick = { goCart() }) {
                         BadgedBox(badge = { CartBadge(state.cartCount) }) {
                             Icon(Icons.Outlined.ShoppingBag, "Your bag, ${state.cartCount} items")
@@ -111,16 +147,13 @@ fun EcommerceGraph(
         },
         snackbarHost = {
             // Purchase actions remain tappable while an add-to-bag acknowledgement is visible.
-            SnackbarHost(snackbar, Modifier.padding(bottom = when (route) {
-                "cart", "checkout" -> 144.dp
-                "product/{productId}" -> 100.dp
-                else -> 0.dp
-            }))
+            SnackbarHost(snackbar, Modifier.padding(bottom = footerDp + 8.dp))
         },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding)) {
+        Box(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
             val heroSpring = motion.slowSpatialSpec<Rect>()
+            CompositionLocalProvider(LocalActionFooterHeightChanged provides { footerHeight = it }) {
             NavHost(
                 navController = navController,
                 startDestination = "discover",
@@ -158,6 +191,8 @@ fun EcommerceGraph(
                         ProductDetailScreen(product, state, viewModel::accept, { goCart() }, imageModifier)
                     } else if (state.loading) {
                         SkeletonShimmer(Modifier.padding(20.dp).fillMaxWidth().height(360.dp))
+                    } else if (state.error != null) {
+                        EmptyFashionState("This collection couldn't load", state.error.orEmpty(), "Retry", { viewModel.accept(EcommerceIntent.Retry) })
                     } else {
                         EmptyFashionState("This piece is unavailable", "Browse the collection to find something you love.",
                             "Browse collection", { browse(FashionCategory.ALL) })
@@ -175,14 +210,6 @@ fun EcommerceGraph(
                     })
                 }
             }
-            if (flight.value < .99f) {
-                val color = MaterialTheme.colorScheme.primary
-                Canvas(Modifier.fillMaxSize()) {
-                    val t = flight.value.coerceIn(0f, 1f)
-                    val x = size.width * (.5f + .4f * t)
-                    val y = size.height * (.83f * (1 - t) - .24f * kotlin.math.sin(t * Math.PI).toFloat())
-                    drawCircle(color, (12.dp.toPx() * (1 - .5f * t)), Offset(x, y))
-                }
             }
         }
     }

@@ -5,25 +5,47 @@ package com.techquantum.feature.billing.navigation
 
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.DarkMode
-import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.ReceiptLong
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.*
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.techquantum.core.designsystem.CartBadge
+import com.techquantum.core.designsystem.CompactModuleTitle
+import com.techquantum.core.designsystem.PaletteAction
 import com.techquantum.feature.billing.presentation.BillingIntent
 import com.techquantum.feature.billing.presentation.BillingViewModel
-import com.techquantum.feature.billing.ui.*
+import com.techquantum.feature.billing.ui.BillPreviewScreen
+import com.techquantum.feature.billing.ui.BillingItemEditor
+import com.techquantum.feature.billing.ui.BillingOutputSheet
+import com.techquantum.feature.billing.ui.FoodSelectionScreen
+import com.techquantum.feature.billing.ui.RunningBillScreen
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -48,17 +70,12 @@ fun BillingGraph(
     },
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            TopAppBar(title = { Column {
-                Text("Kitchen bill", style = MaterialTheme.typography.titleLarge)
-                Text("TechQuantum · Counter demo", style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-            } }, navigationIcon = {
+            TopAppBar(title = { CompactModuleTitle("Kitchen bill", "TechQuantum · Counter demo") }, navigationIcon = {
                 if (route != "select-food") IconButton({ navController.popBackStack() }, Modifier.size(56.dp)) {
                     Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back")
                 }
             }, actions = {
-                IconButton(onClick = onShowThemes, Modifier.size(56.dp)) { Icon(Icons.Outlined.Palette, "Color palette") }
-                IconButton(onToggleDark, Modifier.size(56.dp)) { Icon(Icons.Outlined.DarkMode, "Toggle light and dark mode") }
+                PaletteAction(onShowThemes, 56.dp)
                 IconButton({ navController.navigate("running-bill") { launchSingleTop = true } }, Modifier.size(56.dp)) {
                     BadgedBox(badge = { CartBadge(state.bill.count) }) { Icon(Icons.Outlined.ReceiptLong, "Open running bill") }
                 }
@@ -67,7 +84,7 @@ fun BillingGraph(
         NavHost(
             navController = navController,
             startDestination = "select-food",
-            modifier = Modifier.fillMaxSize().padding(padding),
+            modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding),
             enterTransition = { androidx.compose.animation.slideInHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeIn(motion.defaultEffectsSpec()) },
             exitTransition = { androidx.compose.animation.slideOutHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeOut(motion.defaultEffectsSpec()) },
             popEnterTransition = { androidx.compose.animation.slideInHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeIn(motion.defaultEffectsSpec()) },

@@ -1,5 +1,7 @@
 # UI/UX Overhaul & Optimization Report
 
+**Historical report:** the original12 October claims below are not current validation evidence. The subsequent audit reproduced defects after this report. Approved13 October implementation and actual checks are tracked in [docs/ui-ux-implementation/README.md](docs/ui-ux-implementation/README.md).
+
 **Project**: TQD App Sample (Android / Jetpack Compose)  
 **Branch**: `features/new_ui`  
 **Latest Commit**: `4526542`  

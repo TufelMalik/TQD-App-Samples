@@ -4,8 +4,8 @@ import com.techquantum.core.billingengine.BillReceipt
 import com.techquantum.core.billingengine.BillRepository
 import com.techquantum.core.billingengine.BillState
 import com.techquantum.feature.pos.domain.PosRepository
-import javax.inject.Inject
 import kotlinx.coroutines.flow.StateFlow
+import javax.inject.Inject
 
 class LocalPosRepository @Inject constructor(private val billRepository: BillRepository) : PosRepository {
     override val state: StateFlow<BillState> = billRepository.state

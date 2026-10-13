@@ -7,10 +7,10 @@ import com.techquantum.feature.ecommerce.domain.OrderReceipt
 import com.techquantum.feature.ecommerce.domain.PaymentMethod
 import com.techquantum.feature.ecommerce.domain.Product
 import com.techquantum.feature.ecommerce.domain.ShippingAddress
+import kotlinx.coroutines.delay
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.delay
 
 @Singleton
 class InMemoryEcommerceRepository @Inject constructor() : EcommerceRepository {

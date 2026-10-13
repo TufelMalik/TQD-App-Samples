@@ -2,13 +2,33 @@ package com.techquantum.feature.fooddelivery
 
 import com.techquantum.feature.fooddelivery.data.FoodCatalog
 import com.techquantum.feature.fooddelivery.data.LocalFoodRepository
-import com.techquantum.feature.fooddelivery.domain.*
-import com.techquantum.feature.fooddelivery.presentation.*
+import com.techquantum.feature.fooddelivery.domain.AddOn
+import com.techquantum.feature.fooddelivery.domain.FoodAddress
+import com.techquantum.feature.fooddelivery.domain.FoodBill
+import com.techquantum.feature.fooddelivery.domain.FoodFees
+import com.techquantum.feature.fooddelivery.domain.FoodLine
+import com.techquantum.feature.fooddelivery.domain.FoodOrder
+import com.techquantum.feature.fooddelivery.domain.FoodPayment
+import com.techquantum.feature.fooddelivery.domain.TrackingStage
+import com.techquantum.feature.fooddelivery.presentation.FoodIntent
+import com.techquantum.feature.fooddelivery.presentation.FoodReducer
+import com.techquantum.feature.fooddelivery.presentation.FoodState
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FoodReducerTest {
+    @Test fun correctingOneAddressFieldPreservesTheOtherUnresolvedErrors() {
+        val failed = FoodReducer.reduce(FoodReducer.reduce(ready, FoodIntent.AddDish(dish.id)), FoodIntent.PlaceOrder)
+        val corrected = FoodReducer.reduce(failed, FoodIntent.UpdateAddress(failed.address.copy(name = "Aditi Shah")))
+        assertFalse(corrected.addressErrors.containsKey("name"))
+        assertEquals(setOf("phone", "line", "pinCode"), corrected.addressErrors.keys)
+    }
+
     private val restaurant = FoodCatalog.restaurants.first()
     private val dish = restaurant.dishes.first()
     private val ready = FoodState(restaurants = FoodCatalog.restaurants, loading = false)
@@ -61,6 +81,18 @@ class FoodReducerTest {
         assertEquals("Crispy", switched.cart.single().note)
         assertEquals(0, switched.tip)
         assertNull(switched.pendingDish)
+    }
+
+    @Test fun unavailablePendingRestaurantNeverClearsTheCurrentCart() {
+        val original = FoodReducer.reduce(ready, FoodIntent.AddDish(dish.id)).copy(tip = 20)
+        val other = FoodCatalog.restaurants[1].dishes.first()
+        val pending = FoodReducer.reduce(original, FoodIntent.AddDish(other.id))
+        val restored = pending.copy(restaurants = listOf(restaurant))
+        val result = FoodReducer.reduce(restored, FoodIntent.ConfirmRestaurantSwitch)
+        assertEquals(original.cart, result.cart)
+        assertEquals(20, result.tip)
+        assertNull(result.pendingDish)
+        assertNotNull(result.error)
     }
 
     @Test fun removeFinalQuickAddedItemClearsAllCharges() {

@@ -39,7 +39,12 @@ data class BillingState(
             (query.isBlank() || it.name.contains(query.trim(), ignoreCase = true))
     }
     val busy: Boolean get() = output.status == BillingOutputStatus.RUNNING
-    val previewReceipt: BillReceipt? get() = if (bill.lines.isEmpty()) receipt ?: bill.lastReceipt else null
+    // Output owns its captured snapshot; an idle preview follows the shared counter's latest receipt.
+    val previewReceipt: BillReceipt? get() = when {
+        output.status != BillingOutputStatus.IDLE -> receipt ?: bill.lastReceipt
+        bill.lines.isEmpty() -> bill.lastReceipt ?: receipt
+        else -> null
+    }
 }
 
 sealed interface BillingIntent {

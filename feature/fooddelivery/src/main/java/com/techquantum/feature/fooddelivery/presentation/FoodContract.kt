@@ -1,6 +1,15 @@
 package com.techquantum.feature.fooddelivery.presentation
 
-import com.techquantum.feature.fooddelivery.domain.*
+import com.techquantum.feature.fooddelivery.domain.Cuisine
+import com.techquantum.feature.fooddelivery.domain.FoodAddress
+import com.techquantum.feature.fooddelivery.domain.FoodFees
+import com.techquantum.feature.fooddelivery.domain.FoodLine
+import com.techquantum.feature.fooddelivery.domain.FoodOrder
+import com.techquantum.feature.fooddelivery.domain.FoodPayment
+import com.techquantum.feature.fooddelivery.domain.MenuCategory
+import com.techquantum.feature.fooddelivery.domain.PendingDish
+import com.techquantum.feature.fooddelivery.domain.Restaurant
+import com.techquantum.feature.fooddelivery.domain.TrackingStage
 
 data class FoodState(
     val restaurants: List<Restaurant> = emptyList(), val loading: Boolean = true,

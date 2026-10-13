@@ -6,42 +6,87 @@ package com.techquantum.feature.billing.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.EditNote
+import androidx.compose.material.icons.outlined.Print
+import androidx.compose.material.icons.outlined.ReceiptLong
+import androidx.compose.material.icons.outlined.Restaurant
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.SearchOff
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.techquantum.core.billingengine.BillLine
 import com.techquantum.core.billingengine.BillTotals
 import com.techquantum.core.billingengine.MenuItem
-import com.techquantum.core.designsystem.*
-import com.techquantum.feature.billing.presentation.*
+import com.techquantum.core.designsystem.ActionFooter
+import com.techquantum.core.designsystem.AnimatedMoney
+import com.techquantum.core.designsystem.DietaryIndicator
+import com.techquantum.core.designsystem.LuxuryBadge
+import com.techquantum.core.designsystem.QuantityStepper
+import com.techquantum.core.designsystem.ShowcaseSheet
+import com.techquantum.core.designsystem.SkeletonShimmer
+import com.techquantum.core.designsystem.formatRupees
+import com.techquantum.core.designsystem.theme.TQDDimensions
+import com.techquantum.feature.billing.presentation.BillingIntent
+import com.techquantum.feature.billing.presentation.BillingOutput
+import com.techquantum.feature.billing.presentation.BillingOutputStatus
+import com.techquantum.feature.billing.presentation.BillingState
 
 @Composable
 fun FoodSelectionScreen(
@@ -57,8 +102,8 @@ fun FoodSelectionScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
     ) { padding ->
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(156.dp),
-            modifier = Modifier.fillMaxSize().padding(padding).testTag("billing-menu"),
+            columns = GridCells.Adaptive(if (LocalDensity.current.fontScale > 1.25f) 240.dp else 156.dp),
+            modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).testTag("billing-menu"),
             contentPadding = PaddingValues(bottom = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -96,7 +141,7 @@ fun FoodSelectionScreen(
                 item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
                     Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center) {
-                        Icon(Icons.Outlined.SearchOff, null, Modifier.size(48.dp))
+                        Icon(Icons.Outlined.SearchOff, null, Modifier.size(TQDDimensions.operatorTouchTargetMin))
                         Text("No food matches", style = MaterialTheme.typography.titleLarge)
                         TextButton({ onIntent(BillingIntent.Search("")); onIntent(BillingIntent.SelectCategory("All")) }) { Text("Clear filters") }
                     }
@@ -122,7 +167,7 @@ private fun CategoryRail(state: BillingState, onIntent: (BillingIntent) -> Unit)
                 onClick = { onIntent(BillingIntent.SelectCategory(category)) },
                 label = { Text(category) },
                 shape = RoundedCornerShape(999.dp),
-                modifier = Modifier.heightIn(min = 48.dp)
+                modifier = Modifier.heightIn(min = TQDDimensions.operatorTouchTargetMin)
             )
         }
     }
@@ -147,8 +192,8 @@ private fun FoodSelectionCard(item: MenuItem, count: Int, onIntent: (BillingInte
             FoodIndicators(item)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(item.name, Modifier.weight(1f).heightIn(min = 42.dp), style = MaterialTheme.typography.titleSmall,
-                    maxLines = 2, overflow = TextOverflow.Ellipsis)
-                IconButton({ onIntent(BillingIntent.Edit(item.id, false)) }, Modifier.size(48.dp)) {
+                    maxLines = Int.MAX_VALUE)
+                IconButton({ onIntent(BillingIntent.Edit(item.id, false)) }, Modifier.size(TQDDimensions.operatorTouchTargetMin)) {
                     Icon(Icons.Outlined.EditNote, "Customize ${item.name}")
                 }
             }
@@ -156,7 +201,7 @@ private fun FoodSelectionCard(item: MenuItem, count: Int, onIntent: (BillingInte
                 Text(formatRupees(item.price), style = MaterialTheme.typography.titleMedium)
                 FilledTonalButton(
                     onClick = { onIntent(BillingIntent.Add(item.id)) },
-                    modifier = Modifier.heightIn(min = 44.dp).testTag("bill-add-${item.id}"),
+                    modifier = Modifier.heightIn(min = TQDDimensions.operatorTouchTargetMin).testTag("bill-add-${item.id}"),
                     shape = RoundedCornerShape(999.dp),
                     contentPadding = PaddingValues(horizontal = 14.dp)
                 ) { Text("Add") }
@@ -171,21 +216,10 @@ private fun FoodSelectionCard(item: MenuItem, count: Int, onIntent: (BillingInte
 
 @Composable
 private fun FoodIndicators(item: MenuItem) {
-    val colors = MaterialTheme.colorScheme
-    val vegColor = if (item.isVeg) FoodVegGreen else FoodNonVegBrown
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-        Surface(
-            Modifier.size(12.dp),
-            shape = RoundedCornerShape(3.dp),
-            border = BorderStroke(1.dp, vegColor),
-            color = colors.surface
-        ) {
-            Box(Modifier.padding(2.5.dp).background(vegColor, CircleShape))
-        }
-        Text(if (item.isVeg) "Veg" else "Non-veg", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
-        Text("·", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
-        Text(when (item.spiceLevel) { 0 -> "No spice"; 1 -> "🌶️ Mild"; 2 -> "🌶️🌶️ Medium"; else -> "🌶️🌶️🌶️ Hot" },
-            style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        DietaryIndicator(item.isVeg)
+        Text(when (item.spiceLevel) { 0 -> "No spice"; 1 -> "Mild"; 2 -> "Medium spice"; else -> "Hot" },
+            style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -206,8 +240,8 @@ fun RunningBillScreen(
             Text("Your next bill starts here", style = MaterialTheme.typography.headlineSmall)
             Text("Select food here or on the POS tab. Both use the same running bill.", textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 16.dp))
-            Button(onBrowse, Modifier.heightIn(min = 52.dp), shape = RoundedCornerShape(18.dp)) { Text("Select food") }
-            if (state.previewReceipt != null) TextButton(onPreview, Modifier.heightIn(min = 52.dp)) { Text("View last receipt") }
+            Button(onBrowse, Modifier.heightIn(min = TQDDimensions.operatorTouchTargetMin), shape = RoundedCornerShape(18.dp)) { Text("Select food") }
+            if (state.previewReceipt != null) TextButton(onPreview, Modifier.heightIn(min = TQDDimensions.operatorTouchTargetMin)) { Text("View last receipt") }
         }
         return
     }
@@ -215,7 +249,7 @@ fun RunningBillScreen(
         bottomBar = { BillingActionBar("Total including demo GST", state.bill.totals.total, "Preview receipt", true,
             onPreview, onActionBarHeightChanged) },
         contentWindowInsets = WindowInsets(0, 0, 0, 0)) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(20.dp),
+        LazyColumn(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding), contentPadding = PaddingValues(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
@@ -232,7 +266,7 @@ fun RunningBillScreen(
                             onClick = { onIntent(BillingIntent.SelectTable(table)) },
                             label = { Text(table) },
                             shape = RoundedCornerShape(999.dp),
-                            modifier = Modifier.heightIn(min = 48.dp)
+                            modifier = Modifier.heightIn(min = TQDDimensions.operatorTouchTargetMin)
                         )
                     }
                 }
@@ -254,30 +288,30 @@ fun RunningBillScreen(
                                 if (line.notes.isNotBlank()) Text(line.notes, style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            IconButton({ onIntent(BillingIntent.Remove(line.key)) }, Modifier.size(48.dp)) {
+                            IconButton({ onIntent(BillingIntent.Remove(line.key)) }, Modifier.size(TQDDimensions.operatorTouchTargetMin)) {
                                 Icon(Icons.Outlined.DeleteOutline, "Remove ${line.item.name}")
                             }
                         }
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically) {
+                        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             QuantityStepper(line.quantity, { onIntent(BillingIntent.ChangeQuantity(line.key, -1)) },
-                                { onIntent(BillingIntent.ChangeQuantity(line.key, 1)) }, touchTargetSize = 48.dp)
+                                { onIntent(BillingIntent.ChangeQuantity(line.key, 1)) }, touchTargetSize = TQDDimensions.operatorTouchTargetMin, itemName = line.item.name)
                             AnimatedMoney(line.total)
                         }
-                        TextButton({ onIntent(BillingIntent.Edit(line.key, true)) }, Modifier.heightIn(min = 40.dp)) { Text("Edit quantity & notes") }
+                        TextButton({ onIntent(BillingIntent.Edit(line.key, true)) }, Modifier.heightIn(min = TQDDimensions.operatorTouchTargetMin)) { Text("Edit quantity & notes") }
                     }
                 }
             }
             item {
                 Text("Demo discount", style = MaterialTheme.typography.titleSmall)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(0, 5, 10).forEach { percent ->
                         FilterChip(
                             selected = state.bill.discountPercent == percent,
                             onClick = { onIntent(BillingIntent.ApplyDiscount(percent)) },
                             label = { Text(if (percent == 0) "None" else "$percent%") },
                             shape = RoundedCornerShape(999.dp),
-                            modifier = Modifier.heightIn(min = 48.dp)
+                            modifier = Modifier.heightIn(min = TQDDimensions.operatorTouchTargetMin)
                         )
                     }
                 }
@@ -299,7 +333,7 @@ fun RunningBillScreen(
             item {
                 OutlinedButton(
                     onClick = onBrowse,
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = TQDDimensions.operatorTouchTargetMin),
                     shape = RoundedCornerShape(18.dp),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 ) { Text("Add more food") }
@@ -317,17 +351,13 @@ private fun BillingActionBar(
     onClick: () -> Unit,
     onHeightChanged: (Int) -> Unit,
 ) {
-    Surface(
-        modifier = Modifier.navigationBarsPadding().onSizeChanged { onHeightChanged(it.height) },
-        tonalElevation = 3.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
-    ) {
+    ActionFooter(onHeightChanged = onHeightChanged) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 AnimatedMoney(total)
             }
-            Button(onClick, Modifier.fillMaxWidth().heightIn(min = 52.dp), enabled = enabled, shape = RoundedCornerShape(18.dp)) { Text(action) }
+            Button(onClick, Modifier.fillMaxWidth().heightIn(min = TQDDimensions.operatorTouchTargetMin), enabled = enabled, shape = RoundedCornerShape(18.dp)) { Text(action) }
         }
     }
 }
@@ -350,7 +380,7 @@ fun BillingTotals(totals: BillTotals, discountPercent: Int? = null, receiptStyle
 @Composable
 private fun ReceiptMoneyRow(label: String, amount: Int, negative: Boolean = false, receiptStyle: Boolean = false) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, fontFamily = if (receiptStyle) FontFamily.Monospace else null)
+        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, fontFamily = if (receiptStyle) FontFamily.Monospace else null)
         Text((if (negative && amount > 0) "−" else "") + formatRupees(amount), style = MaterialTheme.typography.bodyMedium,
             fontFamily = if (receiptStyle) FontFamily.Monospace else null)
     }
@@ -371,15 +401,11 @@ fun BillPreviewScreen(
         return
     }
     Scaffold(modifier = Modifier.testTag("billing_preview"), bottomBar = {
-        Surface(
-            modifier = Modifier.navigationBarsPadding().onSizeChanged { onActionBarHeightChanged(it.height) },
-            tonalElevation = 3.dp,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
-        ) {
+        ActionFooter(onHeightChanged = onActionBarHeightChanged) {
             Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
                     onClick = { onIntent(BillingIntent.Output(BillingOutput.PRINT)) },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = TQDDimensions.operatorTouchTargetMin),
                     shape = RoundedCornerShape(18.dp),
                     enabled = !state.busy
                 ) {
@@ -389,7 +415,7 @@ fun BillPreviewScreen(
                 }
                 OutlinedButton(
                     onClick = { onIntent(BillingIntent.Output(BillingOutput.SHARE)) },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(min = TQDDimensions.operatorTouchTargetMin),
                     shape = RoundedCornerShape(18.dp),
                     enabled = !state.busy,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -401,9 +427,9 @@ fun BillPreviewScreen(
             }
         }
     }, contentWindowInsets = WindowInsets(0, 0, 0, 0)) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        LazyColumn(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     Text("Receipt preview", style = MaterialTheme.typography.headlineMedium)
                     LuxuryBadge("Thermal Print Ready")
                 }
@@ -421,13 +447,15 @@ fun BillPreviewScreen(
                             label = { Text(payment) },
                             enabled = !state.busy,
                             shape = RoundedCornerShape(999.dp),
-                            modifier = Modifier.heightIn(min = 48.dp)
+                            modifier = Modifier.heightIn(min = TQDDimensions.operatorTouchTargetMin)
                         )
                     }
                 }
             }
             item {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                 Surface(
+                    modifier = Modifier.widthIn(max = TQDDimensions.receiptMaxWidth).fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
                     color = MaterialTheme.colorScheme.surface,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
@@ -466,6 +494,7 @@ fun BillPreviewScreen(
                             textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(), fontFamily = FontFamily.Monospace)
                     }
                 }
+                }
             }
             if (state.error != null) item {
                 Text(state.error, color = MaterialTheme.colorScheme.error,
@@ -480,14 +509,13 @@ fun BillPreviewScreen(
 @Composable
 fun BillingItemEditor(state: BillingState, onIntent: (BillingIntent) -> Unit) {
     val item = state.editingItem ?: return
-    ModalBottomSheet(onDismissRequest = { onIntent(BillingIntent.DismissEditor) }) {
-        Column(Modifier.fillMaxWidth().heightIn(max = 540.dp).verticalScroll(rememberScrollState()).imePadding()
-            .padding(start = 20.dp, end = 20.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    ShowcaseSheet({ onIntent(BillingIntent.DismissEditor) }) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Text(item.name, style = MaterialTheme.typography.headlineSmall)
             FoodIndicators(item)
             Text("Quantity", style = MaterialTheme.typography.titleMedium)
             QuantityStepper(state.editQuantity, { onIntent(BillingIntent.EditQuantity(-1)) },
-                { onIntent(BillingIntent.EditQuantity(1)) }, touchTargetSize = 48.dp)
+                { onIntent(BillingIntent.EditQuantity(1)) }, touchTargetSize = TQDDimensions.operatorTouchTargetMin, itemName = item.name)
             OutlinedTextField(
                 value = state.editNotes,
                 onValueChange = { onIntent(BillingIntent.EditNotes(it)) },
@@ -500,7 +528,7 @@ fun BillingItemEditor(state: BillingState, onIntent: (BillingIntent) -> Unit) {
             )
             Button(
                 onClick = { onIntent(BillingIntent.SaveEditor) },
-                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = TQDDimensions.operatorTouchTargetMin),
                 shape = RoundedCornerShape(18.dp)
             ) {
                 Text(if (state.editingExisting) "Update item" else "Add ${state.editQuantity} to bill")
@@ -513,7 +541,7 @@ fun BillingItemEditor(state: BillingState, onIntent: (BillingIntent) -> Unit) {
 fun BillingOutputSheet(state: BillingState, onDismiss: () -> Unit, onNewBill: () -> Unit) {
     if (state.output.status != BillingOutputStatus.SUCCEEDED) return
     val receipt = state.receipt ?: return
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ShowcaseSheet(onDismiss) {
         Column(Modifier.fillMaxWidth().testTag(if (state.output.output == BillingOutput.PRINT) "billing_print_success" else "billing_share_success")
             .padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -526,8 +554,8 @@ fun BillingOutputSheet(state: BillingState, onDismiss: () -> Unit, onNewBill: ()
             Text(if (state.output.output == BillingOutput.PRINT) "Demo printer finished. Your receipt is available for this session."
                 else "Demo share completed. Your receipt is available for this session.", textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Button(onDismiss, Modifier.fillMaxWidth().heightIn(min = 52.dp), shape = RoundedCornerShape(18.dp)) { Text("Done") }
-            TextButton(onNewBill, Modifier.fillMaxWidth().heightIn(min = 52.dp)) { Text("Start another bill") }
+            Button(onDismiss, Modifier.fillMaxWidth().heightIn(min = TQDDimensions.operatorTouchTargetMin), shape = RoundedCornerShape(18.dp)) { Text("Done") }
+            TextButton(onNewBill, Modifier.fillMaxWidth().heightIn(min = TQDDimensions.operatorTouchTargetMin)) { Text("Start another bill") }
         }
     }
 }

@@ -4,17 +4,27 @@ import androidx.annotation.MainThread
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.techquantum.feature.fooddelivery.domain.*
+import com.techquantum.feature.fooddelivery.domain.Cuisine
+import com.techquantum.feature.fooddelivery.domain.FoodAddress
+import com.techquantum.feature.fooddelivery.domain.FoodLine
+import com.techquantum.feature.fooddelivery.domain.FoodPayment
+import com.techquantum.feature.fooddelivery.domain.MenuCategory
+import com.techquantum.feature.fooddelivery.domain.PendingDish
+import com.techquantum.feature.fooddelivery.domain.TrackingStage
+import com.techquantum.feature.fooddelivery.domain.usecase.GetRestaurantsUseCase
+import com.techquantum.feature.fooddelivery.domain.usecase.PlaceFoodOrderUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-import com.techquantum.feature.fooddelivery.domain.usecase.GetRestaurantsUseCase
-import com.techquantum.feature.fooddelivery.domain.usecase.PlaceFoodOrderUseCase
+import javax.inject.Inject
 
 @HiltViewModel
 class FoodViewModel @Inject constructor(
@@ -24,6 +34,11 @@ class FoodViewModel @Inject constructor(
 ) : ViewModel() {
     private val mutableState = MutableStateFlow(FoodState(
         cart = saved.get<ArrayList<FoodLine>>("food.cart")?.toList().orEmpty(),
+        deliveryArea = saved["food.area"] ?: "Adajan, Surat", query = saved["food.query"] ?: "",
+        cuisine = Cuisine.entries.firstOrNull { it.name == saved.get<String>("food.cuisine") } ?: Cuisine.ALL,
+        menuCategory = MenuCategory.entries.firstOrNull { it.name == saved.get<String>("food.category") },
+        pendingDish = saved.get<String>("food.pendingId")?.let { PendingDish(it,
+            saved.get<ArrayList<String>>("food.pendingAddOns")?.toSet().orEmpty(), saved["food.pendingNote"] ?: "") },
         address = saved["food.address"] ?: FoodAddress(), payment = FoodPayment.entries.firstOrNull { it.name == saved.get<String>("food.payment") } ?: FoodPayment.CASH,
         instructions = saved.get<String>("food.instructions").orEmpty(), tip = saved["food.tip"] ?: 0,
         order = saved["food.order"], trackingSeconds = saved["food.seconds"] ?: 0,
@@ -76,6 +91,11 @@ class FoodViewModel @Inject constructor(
         }
     }
     private fun persist(state: FoodState) {
+        saved["food.area"] = state.deliveryArea; saved["food.query"] = state.query
+        saved["food.cuisine"] = state.cuisine.name; saved["food.category"] = state.menuCategory?.name
+        saved["food.pendingId"] = state.pendingDish?.dishId
+        saved["food.pendingAddOns"] = ArrayList(state.pendingDish?.addOnIds.orEmpty())
+        saved["food.pendingNote"] = state.pendingDish?.note
         saved["food.cart"] = ArrayList(state.cart); saved["food.address"] = state.address
         saved["food.payment"] = state.payment.name; saved["food.instructions"] = state.instructions
         saved["food.tip"] = state.tip; saved["food.order"] = state.order

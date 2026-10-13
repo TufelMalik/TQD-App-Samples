@@ -4,11 +4,42 @@
 
 package com.techquantum.feature.fooddelivery.ui
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
@@ -16,33 +47,105 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.LocalShipping
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShoppingBag
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.*
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.Brush
-import com.techquantum.core.designsystem.*
-import com.techquantum.feature.fooddelivery.domain.*
-import com.techquantum.feature.fooddelivery.presentation.*
+import com.techquantum.core.designsystem.ActionFooter
+import com.techquantum.core.designsystem.AnimatedMoney
+import com.techquantum.core.designsystem.CartBadge
+import com.techquantum.core.designsystem.CompactModuleTitle
+import com.techquantum.core.designsystem.DietaryIndicator
+import com.techquantum.core.designsystem.LocalTQDMotionPolicy
+import com.techquantum.core.designsystem.LuxuryBadge
+import com.techquantum.core.designsystem.PaletteAction
+import com.techquantum.core.designsystem.QuantityStepper
+import com.techquantum.core.designsystem.RatingPill
+import com.techquantum.core.designsystem.ShowcaseSheet
+import com.techquantum.core.designsystem.SkeletonShimmer
+import com.techquantum.core.designsystem.formatRupees
+import com.techquantum.feature.fooddelivery.domain.AddOn
+import com.techquantum.feature.fooddelivery.domain.Cuisine
+import com.techquantum.feature.fooddelivery.domain.Dish
+import com.techquantum.feature.fooddelivery.domain.FoodAddress
+import com.techquantum.feature.fooddelivery.domain.FoodBill
+import com.techquantum.feature.fooddelivery.domain.FoodLine
+import com.techquantum.feature.fooddelivery.domain.FoodPayment
+import com.techquantum.feature.fooddelivery.domain.Restaurant
+import com.techquantum.feature.fooddelivery.domain.TrackingStage
+import com.techquantum.feature.fooddelivery.presentation.FoodIntent
+import com.techquantum.feature.fooddelivery.presentation.FoodState
 
 @Composable
 fun FoodHomeScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onRestaurant: (String) -> Unit,
@@ -83,10 +186,10 @@ fun FoodHomeScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onRestauran
         }
         item {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                LuxuryBadge(text = "Artisanal & Michelin Curated", icon = Icons.Default.AutoAwesome)
+                LuxuryBadge(text = "Local kitchen picks", icon = Icons.Default.AutoAwesome)
                 Text("Good food.\nA good day.", style = MaterialTheme.typography.displaySmall)
                 OutlinedTextField(state.query, { onIntent(FoodIntent.Search(it)) }, Modifier.fillMaxWidth().testTag("food_search"),
-                    placeholder = { Text("Restaurant or cuisine") }, leadingIcon = { Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    label = { Text("Restaurant or cuisine") }, leadingIcon = { Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                     trailingIcon = if (state.query.isNotBlank()) ({ IconButton(onClick = { onIntent(FoodIntent.Search("")) }) { Icon(Icons.Default.Close, "Clear food search") } }) else null,
                     singleLine = true, shape = RoundedCornerShape(22.dp), colors = accessibleFieldColors(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { keyboard?.hide() }))
@@ -124,7 +227,6 @@ fun FoodHomeScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onRestauran
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                     Text("What sounds good?", style = MaterialTheme.typography.titleLarge)
-                    Text("Explore all", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                 }
                 Cuisine.entries.chunked(if (largeType) 2 else 3).forEach { cuisines ->
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -142,7 +244,7 @@ fun FoodHomeScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onRestauran
             }
         }
         item {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 Text("Kitchens near you", style = MaterialTheme.typography.titleLarge)
                 Text("${state.filteredRestaurants.size} available", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -183,10 +285,10 @@ fun FoodHomeScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onRestauran
     ) {
         Box {
             RestaurantArtwork(restaurant, heroModifier.fillMaxWidth().height(180.dp))
-            Row(
+            FlowRow(
                 Modifier.fillMaxWidth().padding(14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 LuxuryBadge(text = restaurant.cuisine.label)
                 RatingPill(rating = restaurant.rating)
@@ -195,16 +297,15 @@ fun FoodHomeScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onRestauran
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(restaurant.name, style = MaterialTheme.typography.titleLarge)
             Text(restaurant.description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Icon(Icons.Default.Schedule, null, Modifier.size(15.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("${restaurant.etaMinutes}–${restaurant.etaMinutes + 5} min", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("·", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Icon(Icons.Default.Place, null, Modifier.size(15.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("${restaurant.distanceKm} km", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("·", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 Text(restaurant.cuisine.label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
@@ -213,18 +314,19 @@ fun FoodHomeScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onRestauran
 
 @Composable
 fun RestaurantMenuScreen(restaurant: Restaurant, state: FoodState, onIntent: (FoodIntent) -> Unit,
-    onBack: () -> Unit, onCart: () -> Unit, onToggleDark: () -> Unit, heroModifier: Modifier, modifier: Modifier = Modifier) {
+    onBack: () -> Unit, onCart: () -> Unit, onToggleDark: () -> Unit, heroModifier: Modifier, modifier: Modifier = Modifier,
+    onShowThemes: () -> Unit = {}) {
     val scroll = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var customDish by remember { mutableStateOf<Dish?>(null) }
     Scaffold(modifier.nestedScroll(scroll.nestedScrollConnection).testTag("food_menu"), contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
-            LargeTopAppBar(title = { Text(restaurant.name) }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Default.ArrowBack, "Go back") } },
+            LargeTopAppBar(title = { CompactModuleTitle(restaurant.name) }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Default.ArrowBack, "Go back") } },
                 actions = {
-                    IconButton(onClick = onToggleDark) { Icon(Icons.Default.Contrast, "Toggle dark mode") }
+                    PaletteAction(onShowThemes)
                     IconButton(onClick = onCart) { BadgedBox({ CartBadge(state.cartCount) }) { Icon(Icons.Default.ShoppingBag, "Food cart, ${state.cartCount} items") } }
                 }, scrollBehavior = scroll)
         }, bottomBar = { if (state.cartCount > 0) FoodOrderBar(state, "View order", onCart) }) { padding ->
-        LazyColumn(Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        LazyColumn(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding), contentPadding = PaddingValues(bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item {
                 Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     Box {
@@ -239,7 +341,7 @@ fun RestaurantMenuScreen(restaurant: Restaurant, state: FoodState, onIntent: (Fo
                         }
                     }
                     Text(restaurant.description, style = MaterialTheme.typography.bodyLarge)
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         LuxuryBadge("${restaurant.etaMinutes}–${restaurant.etaMinutes + 5} min")
                         LuxuryBadge("${restaurant.distanceKm} km away")
                         LuxuryBadge("${restaurant.reviewCount} reviews")
@@ -258,7 +360,7 @@ fun RestaurantMenuScreen(restaurant: Restaurant, state: FoodState, onIntent: (Fo
                                 shape = RoundedCornerShape(999.dp)
                             )
                         }
-                        items(MenuCategory.entries) { category ->
+                        items(restaurant.dishes.map { it.category }.distinct(), key = { it.name }) { category ->
                             FilterChip(
                                 selected = state.menuCategory == category,
                                 onClick = { onIntent(FoodIntent.SelectMenuCategory(category)) },
@@ -268,6 +370,9 @@ fun RestaurantMenuScreen(restaurant: Restaurant, state: FoodState, onIntent: (Fo
                         }
                     }
                 }
+            }
+            if (restaurant.dishes.none { state.menuCategory == null || it.category == state.menuCategory }) item(key = "empty-category") {
+                FoodEmptyPanel("No dishes in this category", "Choose another category to keep exploring.", "Show all dishes", { onIntent(FoodIntent.SelectMenuCategory(null)) })
             }
             items(restaurant.dishes.filter { state.menuCategory == null || it.category == state.menuCategory }, key = Dish::id) { dish ->
                 val plain = state.cart.firstOrNull { it.dish.id == dish.id && it.addOns.isEmpty() && it.note.isEmpty() }
@@ -283,72 +388,53 @@ fun RestaurantMenuScreen(restaurant: Restaurant, state: FoodState, onIntent: (Fo
     } }
 }
 
-@Composable private fun DishRow(dish: Dish, quantity: Int, onAdd: () -> Unit, onDecrease: () -> Unit, onCustomize: () -> Unit, modifier: Modifier = Modifier) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
-    ) {
-        Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                VegLabel(dish.vegetarian)
-                Text(dish.name, style = MaterialTheme.typography.titleMedium)
-                Text(dish.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(formatRupees(dish.price), style = MaterialTheme.typography.titleMedium)
-                if (dish.spice > 0) Text(if (dish.spice == 1) "🌶️ Mild spice" else "🌶️🌶️ Spicy", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (dish.addOns.isNotEmpty()) TextButton(onClick = onCustomize, contentPadding = PaddingValues(0.dp), colors = accessibleTextButtonColors()) { Text("Customise") }
+@Composable private fun DishRow(dish: Dish, quantity: Int, onAdd: () -> Unit, onDecrease: () -> Unit,
+    onCustomize: () -> Unit, modifier: Modifier = Modifier) {
+    val stack = LocalDensity.current.fontScale > 1.25f || androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp < 360
+    val copy: @Composable (Modifier) -> Unit = { contentModifier ->
+        Column(contentModifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            DietaryIndicator(dish.vegetarian)
+            Text(dish.name, style = MaterialTheme.typography.titleMedium)
+            Text(dish.description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(formatRupees(dish.price), style = MaterialTheme.typography.titleMedium)
+            if (dish.spice > 0) Text(if (dish.spice == 1) "Mild spice" else "Spicy", style = MaterialTheme.typography.labelMedium)
+            if (dish.addOns.isNotEmpty()) TextButton(onCustomize, colors = accessibleTextButtonColors()) { Text("Customise") }
+        }
+    }
+    Surface(modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+        if (stack) Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            copy(Modifier.fillMaxWidth())
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                DishArtwork(dish, Modifier.size(80.dp).clip(MaterialTheme.shapes.medium))
+                QuickFoodAdd(quantity, onAdd, onDecrease, dish.name)
             }
-            Column(Modifier.width(124.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                DishArtwork(dish, Modifier.size(112.dp).clip(RoundedCornerShape(20.dp)))
-                QuickFoodAdd(quantity, onAdd, onDecrease)
+        } else Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            copy(Modifier.weight(1f))
+            Column(Modifier.width(132.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                DishArtwork(dish, Modifier.size(112.dp).clip(MaterialTheme.shapes.medium))
+                QuickFoodAdd(quantity, onAdd, onDecrease, dish.name)
             }
         }
     }
 }
 
-@Composable private fun QuickFoodAdd(quantity: Int, onAdd: () -> Unit, onDecrease: () -> Unit) {
+@Composable private fun QuickFoodAdd(quantity: Int, onAdd: () -> Unit, onDecrease: () -> Unit, itemName: String) {
     val motion = MaterialTheme.motionScheme
-    AnimatedContent(quantity > 0, transitionSpec = { (fadeIn(motion.fastEffectsSpec()) + scaleIn(motion.fastSpatialSpec(), .92f))
-        .togetherWith(fadeOut(motion.fastEffectsSpec())).using(SizeTransform { _, _ -> motion.fastSpatialSpec() }) }, label = "Quick add") { added ->
-        if (!added) FilledTonalButton(
-            onClick = onAdd,
-            modifier = Modifier.heightIn(min = 44.dp),
-            shape = RoundedCornerShape(999.dp),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-        ) {
+    AnimatedContent(quantity > 0, transitionSpec = {
+        fadeIn(motion.fastEffectsSpec()).togetherWith(fadeOut(motion.fastEffectsSpec()))
+            .using(SizeTransform { _, _ -> motion.fastSpatialSpec() })
+    }, label = "Quick add") { added ->
+        if (!added) FilledTonalButton(onAdd, Modifier.heightIn(min = 48.dp).semantics { contentDescription = "Add $itemName" }) {
             Icon(Icons.Default.Add, null, Modifier.size(18.dp)); Text(" Add")
-        }
-        else Surface(
-            shape = RoundedCornerShape(999.dp),
-            color = MaterialTheme.colorScheme.primaryContainer,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onDecrease, modifier = Modifier.size(44.dp)) { Icon(Icons.Default.Remove, "Remove one item", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer) }
-                AnimatedContent(quantity, label = "Dish count", transitionSpec = { fadeIn(motion.fastEffectsSpec()).togetherWith(fadeOut(motion.fastEffectsSpec())) }) {
-                    Text(it.toString(), Modifier.width(28.dp).semantics { contentDescription = "Quantity $it" },
-                        style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                }
-                IconButton(onClick = onAdd, modifier = Modifier.size(44.dp)) { Icon(Icons.Default.Add, "Add one item", Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer) }
-            }
-        }
+        } else QuantityStepper(quantity, onDecrease, onAdd, itemName = itemName, minimum = 0)
     }
 }
 
-@Composable private fun VegLabel(vegetarian: Boolean) {
-    val colors = MaterialTheme.colorScheme
-    val vegColor = if (vegetarian) FoodVegGreen else FoodNonVegBrown
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Surface(Modifier.size(14.dp), shape = RoundedCornerShape(4.dp), border = BorderStroke(1.2.dp, vegColor), color = colors.surface) {
-            Box(Modifier.padding(3.dp).background(vegColor, CircleShape))
-        }
-        Text(if (vegetarian) "Vegetarian" else "Non-vegetarian", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
-    }
-}
+@Composable private fun VegLabel(vegetarian: Boolean) { DietaryIndicator(vegetarian) }
 
 @Composable fun FoodEmptyPanel(title: String, description: String, action: String, onAction: () -> Unit) {
-    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    // Content only: a LazyColumn item must not create another unbounded vertical scroller.
+    Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Icon(Icons.Default.Restaurant, null, Modifier.size(44.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(title, style = MaterialTheme.typography.headlineSmall)
         Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -356,11 +442,14 @@ fun RestaurantMenuScreen(restaurant: Restaurant, state: FoodState, onIntent: (Fo
     }
 }
 
-@Composable private fun FoodSheet(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden, enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded))) {
-        Column(Modifier.fillMaxWidth().heightIn(max = 680.dp).verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp), content = content)
+@Composable fun FoodEmptyScreen(title: String, description: String, action: String, onAction: () -> Unit) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+        FoodEmptyPanel(title, description, action, onAction)
     }
+}
+
+@Composable private fun FoodSheet(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+    ShowcaseSheet(onDismiss, content = content)
 }
 
 @Composable private fun CustomizeDishSheet(dish: Dish, initialIds: Set<String>, initialNote: String, action: String, onDismiss: () -> Unit, onSave: (Set<String>, String) -> Unit) {
@@ -397,7 +486,7 @@ fun FoodCartScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onCheckout:
     var customKey by rememberSaveable { mutableStateOf<String?>(null) }
     Column(modifier.fillMaxSize().testTag("food_cart")) {
         if (state.cart.isEmpty()) {
-            FoodEmptyPanel("Something delicious is missing", "Explore nearby kitchens and add your favourites.", "Explore kitchens", onBrowse)
+            FoodEmptyScreen("Something delicious is missing", "Explore nearby kitchens and add your favourites.", "Explore kitchens", onBrowse)
         } else {
             LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
                 item {
@@ -410,7 +499,7 @@ fun FoodCartScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onCheckout:
                 item {
                     val animatedProgress by animateFloatAsState(
                         targetValue = (state.bill.subtotal / 499f).coerceIn(0f, 1f),
-                        animationSpec = spring(stiffness = Spring.StiffnessLow),
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
                         label = "free_delivery_progress"
                     )
                     if (state.bill.subtotal < 499) {
@@ -462,9 +551,9 @@ fun FoodCartScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onCheckout:
                                 }
                                 IconButton(onClick = { onIntent(FoodIntent.RemoveLine(line.key)) }) { Icon(Icons.Default.DeleteOutline, "Remove ${line.dish.name}") }
                             }
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                AnimatedMoney(line.total, Modifier.weight(1f))
-                                QuantityStepper(line.quantity, { onIntent(FoodIntent.ChangeQuantity(line.key, -1)) }, { onIntent(FoodIntent.ChangeQuantity(line.key, 1)) })
+                            FlowRow(verticalArrangement = Arrangement.spacedBy(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                AnimatedMoney(line.total)
+                                QuantityStepper(line.quantity, { onIntent(FoodIntent.ChangeQuantity(line.key, -1)) }, { onIntent(FoodIntent.ChangeQuantity(line.key, 1)) }, itemName = line.dish.name)
                             }
                             TextButton(onClick = { customKey = line.key }, colors = accessibleTextButtonColors(), contentPadding = PaddingValues(0.dp)) { Text("Edit customisation") }
                         }
@@ -536,12 +625,7 @@ fun FoodCartScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onCheckout:
 }
 @Composable private fun FoodOrderBar(state: FoodState, action: String, onClick: () -> Unit, enabled: Boolean = true) {
     val largeType = LocalDensity.current.fontScale > 1.25f
-    Surface(
-        Modifier.fillMaxWidth().navigationBarsPadding(),
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = 3.dp,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
-    ) {
+    ActionFooter {
         if (largeType) Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text("Total", Modifier.weight(1f)); AnimatedMoney(state.bill.total) }
             Button(onClick, Modifier.fillMaxWidth().heightIn(min = 52.dp), enabled = enabled, shape = RoundedCornerShape(18.dp)) { Text(action) }
@@ -555,10 +639,20 @@ fun FoodCartScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onCheckout:
 @Composable
 fun FoodCheckoutScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onBrowse: () -> Unit, modifier: Modifier = Modifier) {
     val keyboard = LocalSoftwareKeyboardController.current
+    val addressFocus = remember { listOf("name", "phone", "line", "city", "pinCode").associateWith { FocusRequester() } }
+    val listState = rememberLazyListState()
+    var validationAttempt by rememberSaveable { mutableIntStateOf(0) }
+    LaunchedEffect(validationAttempt, state.addressErrors) {
+        if (validationAttempt > 0) addressFocus.keys.firstOrNull { it in state.addressErrors }?.let { field ->
+            listState.scrollToItem(1)
+            withFrameNanos { }
+            addressFocus.getValue(field).requestFocus()
+        }
+    }
     Column(modifier.fillMaxSize().testTag("food_checkout")) {
-        if (state.cart.isEmpty()) FoodEmptyPanel("Your order is empty", "Add a meal before choosing a delivery address.", "Explore kitchens", onBrowse)
+        if (state.cart.isEmpty()) FoodEmptyScreen("Your order is empty", "Add a meal before choosing a delivery address.", "Explore kitchens", onBrowse)
         else {
-            LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+            LazyColumn(Modifier.weight(1f), state = listState, contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         LuxuryBadge("Fast Guest Checkout")
@@ -577,12 +671,12 @@ fun FoodCheckoutScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onBrows
                     ) {
                         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             Text("Delivery address", style = MaterialTheme.typography.titleLarge)
-                            AddressField("Full name", state.address.name, state.addressErrors["name"], !state.placingOrder) { onIntent(FoodIntent.UpdateAddress(state.address.copy(name = it))) }
-                            AddressField("Mobile number", state.address.phone, state.addressErrors["phone"], !state.placingOrder, KeyboardType.Phone) {
+                            AddressField("Full name", state.address.name, state.addressErrors["name"], !state.placingOrder, focus = addressFocus.getValue("name")) { onIntent(FoodIntent.UpdateAddress(state.address.copy(name = it))) }
+                            AddressField("Mobile number", state.address.phone, state.addressErrors["phone"], !state.placingOrder, KeyboardType.Phone, addressFocus.getValue("phone")) {
                                 onIntent(FoodIntent.UpdateAddress(state.address.copy(phone = it.filter(Char::isDigit).take(10)))) }
-                            AddressField("Building, street & landmark", state.address.line, state.addressErrors["line"], !state.placingOrder) { onIntent(FoodIntent.UpdateAddress(state.address.copy(line = it.take(180)))) }
-                            AddressField("City", state.address.city, state.addressErrors["city"], !state.placingOrder) { onIntent(FoodIntent.UpdateAddress(state.address.copy(city = it))) }
-                            AddressField("PIN code", state.address.pinCode, state.addressErrors["pinCode"], !state.placingOrder, KeyboardType.Number) {
+                            AddressField("Building, street & landmark", state.address.line, state.addressErrors["line"], !state.placingOrder, focus = addressFocus.getValue("line")) { onIntent(FoodIntent.UpdateAddress(state.address.copy(line = it.take(180)))) }
+                            AddressField("City", state.address.city, state.addressErrors["city"], !state.placingOrder, focus = addressFocus.getValue("city")) { onIntent(FoodIntent.UpdateAddress(state.address.copy(city = it))) }
+                            AddressField("PIN code", state.address.pinCode, state.addressErrors["pinCode"], !state.placingOrder, KeyboardType.Number, addressFocus.getValue("pinCode"), last = true) {
                                 onIntent(FoodIntent.UpdateAddress(state.address.copy(pinCode = it.filter(Char::isDigit).take(6)))) }
                         }
                     }
@@ -637,32 +731,37 @@ fun FoodCheckoutScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onBrows
                 }
                 state.error?.let { error -> item { Text(error, Modifier.semantics { liveRegion = LiveRegionMode.Polite }, color = MaterialTheme.colorScheme.error) } }
             }
-            FoodOrderBar(state, if (state.placingOrder) "Placing order…" else "Place order", { keyboard?.hide(); onIntent(FoodIntent.PlaceOrder) }, !state.placingOrder)
+            FoodOrderBar(state, if (state.placingOrder) "Placing order…" else "Place order", { validationAttempt++; keyboard?.hide(); onIntent(FoodIntent.PlaceOrder) }, !state.placingOrder)
         }
     }
 }
 
-@Composable private fun AddressField(label: String, value: String, error: String?, enabled: Boolean, keyboardType: KeyboardType = KeyboardType.Text, onChange: (String) -> Unit) {
-    OutlinedTextField(value, onChange, Modifier.fillMaxWidth(), enabled = enabled, label = { Text(label) }, singleLine = true,
-        shape = RoundedCornerShape(16.dp), isError = error != null, supportingText = if (error != null) ({ Text(error) }) else null, colors = accessibleFieldColors(),
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Next))
+@Composable private fun AddressField(label: String, value: String, error: String?, enabled: Boolean,
+    keyboardType: KeyboardType = KeyboardType.Text, focus: FocusRequester? = null, last: Boolean = false, onChange: (String) -> Unit) {
+    val manager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    OutlinedTextField(value, onChange, Modifier.fillMaxWidth().then(if (focus != null) Modifier.focusRequester(focus) else Modifier),
+        enabled = enabled, label = { Text(label) }, singleLine = true, isError = error != null,
+        supportingText = if (error != null) ({ Text(error) }) else null, colors = accessibleFieldColors(),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = if (last) ImeAction.Done else ImeAction.Next),
+        keyboardActions = KeyboardActions(onNext = { manager.moveFocus(FocusDirection.Next) }, onDone = { keyboard?.hide() }))
 }
 
 @Composable
 fun FoodTrackingScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onHome: () -> Unit, modifier: Modifier = Modifier) {
     val order = state.order
     if (order == null) {
-        Box(modifier.fillMaxSize().testTag("food_tracking")) { FoodEmptyPanel("A meal is waiting for you", "Order from a nearby kitchen to follow its journey.", "Explore kitchens", onHome) }
+        Box(modifier.fillMaxSize().testTag("food_tracking")) { FoodEmptyScreen("A meal is waiting for you", "Order from a nearby kitchen to follow its journey.", "Explore kitchens", onHome) }
         return
     }
     val motion = MaterialTheme.motionScheme
     LazyColumn(modifier.fillMaxSize().testTag("food_tracking"), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         item {
-            LuxuryBadge("Live GPS Tracking · Order ${order.id}")
+            LuxuryBadge("Preview tracking · Order ${order.id}")
             AnimatedContent(state.trackingStage, transitionSpec = { (fadeIn(motion.defaultEffectsSpec()) + slideInVertically(motion.defaultSpatialSpec()) { it / 3 })
                 .togetherWith(fadeOut(motion.fastEffectsSpec())) }, label = "Delivery status") { stage ->
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(if (stage == TrackingStage.DELIVERED) "Your meal has arrived." else stage.detail, style = MaterialTheme.typography.headlineLarge)
+                    Text(if (stage == TrackingStage.DELIVERED) "Your meal has arrived." else stage.detail, modifier = Modifier.semantics { heading(); liveRegion = LiveRegionMode.Polite }, style = MaterialTheme.typography.headlineLarge)
                     Text(if (stage == TrackingStage.DELIVERED) "Delivered to ${order.address.name}" else "Arriving in ${state.etaSeconds / 60} min ${state.etaSeconds % 60}s",
                         style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -678,7 +777,14 @@ fun FoodTrackingScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onHome:
                 Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                     TrackingStage.entries.forEach { stage ->
                         val completed = state.trackingStage.ordinal >= stage.ordinal
-                        Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                        val status = androidx.compose.ui.res.stringResource(when {
+                            state.trackingStage == stage -> com.techquantum.core.designsystem.R.string.tracking_current
+                            completed -> com.techquantum.core.designsystem.R.string.tracking_completed
+                            else -> com.techquantum.core.designsystem.R.string.tracking_upcoming
+                        })
+                        Row(Modifier.semantics(mergeDescendants = true) {
+                            stateDescription = status
+                        }, verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                             Icon(if (completed) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked, null,
                                 tint = if (completed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
                             Column {
@@ -718,8 +824,13 @@ fun FoodTrackingScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onHome:
 
 @Composable private fun DeliveryRouteMap(stage: TrackingStage, restaurant: String, modifier: Modifier) {
     val c = MaterialTheme.colorScheme
+    val reduced = LocalTQDMotionPolicy.current.reduced
     val progress by animateFloatAsState(stage.ordinal / 3f, MaterialTheme.motionScheme.slowSpatialSpec(), label = "Delivery journey")
-    val pulse by rememberInfiniteTransition(label = "Live location").animateFloat(.55f, 1f, infiniteRepeatable(tween(900), RepeatMode.Reverse), label = "Rider pulse")
+    val pulse = if (!reduced && stage != TrackingStage.DELIVERED) {
+        val animated by rememberInfiniteTransition(label = "Preview location").animateFloat(.55f, 1f,
+            infiniteRepeatable(tween(1000), RepeatMode.Reverse), label = "Rider pulse")
+        animated
+    } else 1f
     Box(modifier.background(c.surfaceContainerHigh)) {
         Canvas(Modifier.fillMaxSize().semantics { contentDescription = "Preview delivery route from $restaurant to your address, ${stage.label}" }) {
             val w = size.width; val h = size.height
@@ -732,7 +843,7 @@ fun FoodTrackingScreen(state: FoodState, onIntent: (FoodIntent) -> Unit, onHome:
             drawCircle(c.secondaryContainer, 17.dp.toPx(), points.last()); drawCircle(c.onSecondaryContainer, 6.dp.toPx(), points.last())
             val scaled = progress.coerceIn(0f, 1f) * 3; val segment = scaled.toInt().coerceAtMost(2); val local = (scaled - segment).coerceIn(0f, 1f)
             val dot = points[segment] + (points[segment + 1] - points[segment]) * local
-            drawCircle(c.primary.copy(alpha = .18f * pulse), 24.dp.toPx() * pulse, dot)
+            if (!reduced && stage != TrackingStage.DELIVERED) drawCircle(c.primary.copy(alpha = .18f * pulse), 24.dp.toPx() * pulse, dot)
             drawCircle(c.primary, 11.dp.toPx(), dot); drawCircle(c.onPrimary, 4.dp.toPx(), dot)
         }
         Surface(Modifier.align(Alignment.BottomStart).padding(14.dp), shape = CircleShape, color = c.surface) {

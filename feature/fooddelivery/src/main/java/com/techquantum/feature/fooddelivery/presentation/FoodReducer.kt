@@ -1,6 +1,12 @@
 package com.techquantum.feature.fooddelivery.presentation
 
-import com.techquantum.feature.fooddelivery.domain.*
+import com.techquantum.feature.fooddelivery.domain.AddOn
+import com.techquantum.feature.fooddelivery.domain.Cuisine
+import com.techquantum.feature.fooddelivery.domain.FoodAddress
+import com.techquantum.feature.fooddelivery.domain.FoodLine
+import com.techquantum.feature.fooddelivery.domain.PendingDish
+import com.techquantum.feature.fooddelivery.domain.Restaurant
+import com.techquantum.feature.fooddelivery.domain.TrackingStage
 
 object FoodReducer {
     fun reduce(state: FoodState, intent: FoodIntent): FoodState {
@@ -20,10 +26,15 @@ object FoodReducer {
             is FoodIntent.CustomizeLine -> customize(state, intent)
             is FoodIntent.SetInstructions -> state.copy(instructions = intent.instructions.take(180))
             is FoodIntent.SetTip -> state.copy(tip = intent.amount.coerceIn(0, 100))
-            is FoodIntent.UpdateAddress -> state.copy(address = intent.address, addressErrors = emptyMap(), error = null)
+            is FoodIntent.UpdateAddress -> state.copy(address = intent.address,
+                addressErrors = validateAddress(intent.address).filterKeys { it in state.addressErrors }, error = null)
             is FoodIntent.SelectPayment -> state.copy(payment = intent.payment)
             FoodIntent.CancelRestaurantSwitch -> state.copy(pendingDish = null)
-            FoodIntent.ConfirmRestaurantSwitch -> state.pendingDish?.let { add(state.copy(cart = emptyList(), tip = 0, pendingDish = null), it) } ?: state
+            FoodIntent.ConfirmRestaurantSwitch -> state.pendingDish?.let { pending ->
+                if (state.restaurants.any { kitchen -> kitchen.dishes.any { it.id == pending.dishId } })
+                    add(state.copy(cart = emptyList(), tip = 0, pendingDish = null), pending)
+                else state.copy(pendingDish = null, error = "This dish is unavailable. Your current order is unchanged.")
+            } ?: state
             FoodIntent.PlaceOrder -> {
                 val errors = validateAddress(state.address)
                 when {

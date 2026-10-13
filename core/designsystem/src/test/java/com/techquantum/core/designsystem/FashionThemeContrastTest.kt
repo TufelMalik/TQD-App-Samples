@@ -14,7 +14,10 @@ class FashionThemeContrastTest {
                 val mode = if (dark) "dark" else "light"
                 theme.colorScheme(dark).contentPairs().forEach { (role, pair) ->
                     val ratio = contrastRatio(pair.first, pair.second)
-                    assertTrue("${theme.name} $mode $role contrast is $ratio, must be at least 4.5:1", ratio >= 4.5f)
+                    assertTrue(
+                        "${theme.name} $mode $role contrast is $ratio, must be at least 4.5:1",
+                        ratio >= 4.5f
+                    )
                 }
             }
         }
@@ -23,17 +26,55 @@ class FashionThemeContrastTest {
     @Test
     fun lightSchemesRetainAllRequestedBrandAnchors() {
         val expected = mapOf(
-            FashionTheme.LUXURY_ETHNIC to listOf(0xFFFFFAF2, 0xFF6B0D1B, 0xFFD81B60, 0xFFC49A2E, 0xFF6A6F3A),
-            FashionTheme.URBAN_THREADS to listOf(0xFFC7CBD4, 0xFF0F1D3A, 0xFF1E3A5F, 0xFF475569, 0xFF0A0A0A),
-            FashionTheme.STREETWEAR to listOf(0xFFF5F5F5, 0xFFD72638, 0xFF2563EB, 0xFFF97316, 0xFF2C2C2C, 0xFF0D0D0D),
-            FashionTheme.ATHLEISURE to listOf(0xFFFFFFFF, 0xFFC6FF00, 0xFF0066FF, 0xFFA7A9AC, 0xFF0D0F12),
-            FashionTheme.LUXEVA to listOf(0xFFF6EFE6, 0xFFB5566B, 0xFF7A1F2D, 0xFF8A6D5A, 0xFF1D1D1F),
+            FashionTheme.LUXURY_ETHNIC to listOf(
+                0xFFFFFAF2,
+                0xFF6B0D1B,
+                0xFFD81B60,
+                0xFFC49A2E,
+                0xFF6A6F3A
+            ),
+            FashionTheme.URBAN_THREADS to listOf(
+                0xFFC7CBD4,
+                0xFF0F1D3A,
+                0xFF1E3A5F,
+                0xFF475569,
+                0xFF0A0A0A
+            ),
+            FashionTheme.STREETWEAR to listOf(
+                0xFFF5F5F5,
+                0xFFD72638,
+                0xFF2563EB,
+                0xFFF97316,
+                0xFF2C2C2C,
+                0xFF0D0D0D
+            ),
+            FashionTheme.ATHLEISURE to listOf(
+                0xFFFFFFFF,
+                0xFFC6FF00,
+                0xFF0066FF,
+                0xFFA7A9AC,
+                0xFF0D0F12
+            ),
+            FashionTheme.LUXEVA to listOf(
+                0xFFF6EFE6,
+                0xFFB5566B,
+                0xFF7A1F2D,
+                0xFF8A6D5A,
+                0xFF1D1D1F
+            ),
         )
         expected.forEach { (theme, anchors) ->
             val palette = theme.palette
-            val actual = setOf(palette.background, palette.primary, palette.secondary, palette.tertiary,
-                palette.outline, palette.ink, palette.darkBackground, palette.darkSurface)
-            anchors.forEach { anchor -> assertTrue("${theme.name} missing ${anchor.toString(16)}", Color(anchor) in actual) }
+            val actual = setOf(
+                palette.background, palette.primary, palette.secondary, palette.tertiary,
+                palette.outline, palette.ink, palette.darkBackground, palette.darkSurface
+            )
+            anchors.forEach { anchor ->
+                assertTrue(
+                    "${theme.name} missing ${anchor.toString(16)}",
+                    Color(anchor) in actual
+                )
+            }
             assertEquals(theme.palette.background, theme.lightColorScheme.background)
             assertEquals(theme.palette.darkBackground, theme.darkColorScheme.background)
         }
@@ -54,7 +95,10 @@ class FashionThemeContrastTest {
         FashionTheme.entries.forEach { theme ->
             listOf(false, true).forEach { dark ->
                 val scheme = theme.colorScheme(dark)
-                assertTrue("${theme.name} outline needs 3:1", contrastRatio(scheme.outline, scheme.surface) >= 3f)
+                assertTrue(
+                    "${theme.name} outline needs 3:1",
+                    contrastRatio(scheme.outline, scheme.surface) >= 3f
+                )
             }
         }
     }
@@ -68,7 +112,10 @@ class FashionThemeContrastTest {
                     val ratio = contrastRatio(pair.first, pair.second)
                     assertTrue("${module.name} $dark $role contrast is $ratio", ratio >= 4.5f)
                 }
-                assertTrue("${module.name} outline needs 3:1", contrastRatio(scheme.outline, scheme.surface) >= 3f)
+                assertTrue(
+                    "${module.name} outline needs 3:1",
+                    contrastRatio(scheme.outline, scheme.surface) >= 3f
+                )
             }
         }
     }

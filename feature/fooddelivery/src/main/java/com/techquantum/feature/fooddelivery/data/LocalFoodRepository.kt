@@ -1,10 +1,16 @@
 package com.techquantum.feature.fooddelivery.data
 
-import com.techquantum.feature.fooddelivery.domain.*
+import com.techquantum.feature.fooddelivery.domain.FoodAddress
+import com.techquantum.feature.fooddelivery.domain.FoodFees
+import com.techquantum.feature.fooddelivery.domain.FoodLine
+import com.techquantum.feature.fooddelivery.domain.FoodOrder
+import com.techquantum.feature.fooddelivery.domain.FoodPayment
+import com.techquantum.feature.fooddelivery.domain.FoodRepository
+import com.techquantum.feature.fooddelivery.domain.Restaurant
+import kotlinx.coroutines.delay
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.delay
 
 @Singleton
 class LocalFoodRepository @Inject constructor() : FoodRepository {

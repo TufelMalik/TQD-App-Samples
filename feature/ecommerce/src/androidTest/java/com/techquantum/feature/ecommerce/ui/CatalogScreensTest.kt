@@ -150,7 +150,7 @@ class CatalogScreensTest {
             compose.onNodeWithText(theme.displayName).assertIsSelected()
             compose.runOnIdle { assertEquals(theme, selected) }
         }
-        compose.onNodeWithText("Dark").assertIsDisplayed().performClick().assertIsSelected()
+        compose.onNodeWithText("Dark").performScrollTo().assertIsDisplayed().performClick().assertIsSelected()
         compose.onNodeWithText("Done").assertIsDisplayed()
         compose.runOnIdle { assertEquals(true, dark) }
         compose.onNodeWithText("Light").performClick().assertIsSelected()

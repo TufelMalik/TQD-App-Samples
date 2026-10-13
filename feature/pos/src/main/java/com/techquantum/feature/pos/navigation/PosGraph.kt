@@ -4,27 +4,30 @@ package com.techquantum.feature.pos.navigation
 
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.DarkMode
-import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.techquantum.core.designsystem.CompactModuleTitle
+import com.techquantum.core.designsystem.PaletteAction
 import com.techquantum.feature.pos.presentation.PosIntent
 import com.techquantum.feature.pos.presentation.PosViewModel
 import com.techquantum.feature.pos.ui.PosChargeScreen
@@ -48,24 +51,23 @@ fun PosGraph(
             navController.navigate("receipt") { popUpTo("workspace"); launchSingleTop = true }
         }
     }
-    Scaffold(modifier, topBar = {
-        CenterAlignedTopAppBar(title = { Text(when (route) {
+    Scaffold(modifier, contentWindowInsets = WindowInsets(0, 0, 0, 0), topBar = {
+        CenterAlignedTopAppBar(title = { CompactModuleTitle(when (route) {
             "charge" -> "Complete payment"
             "receipt" -> "Payment complete"
             else -> "Counter service"
         }) }, navigationIcon = {
-            if (route != "workspace") IconButton({ navController.popBackStack() }) {
+            if (route != "workspace") IconButton({ navController.popBackStack() }, Modifier.size(56.dp)) {
                 Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back to counter")
             }
         }, actions = {
-            IconButton(onClick = onShowThemes) { Icon(Icons.Outlined.Palette, "Color palette") }
-            IconButton(onToggleDark) { Icon(Icons.Outlined.DarkMode, "Toggle light and dark mode") }
+            PaletteAction(onShowThemes, 56.dp)
         })
     }) { padding ->
         NavHost(
             navController = navController,
             startDestination = "workspace",
-            modifier = Modifier.padding(padding),
+            modifier = Modifier.padding(padding).consumeWindowInsets(padding),
             enterTransition = { androidx.compose.animation.slideInHorizontally(motion.defaultSpatialSpec()) { it / 3 } + fadeIn(motion.defaultEffectsSpec()) },
             exitTransition = { androidx.compose.animation.slideOutHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeOut(motion.defaultEffectsSpec()) },
             popEnterTransition = { androidx.compose.animation.slideInHorizontally(motion.defaultSpatialSpec()) { -it / 3 } + fadeIn(motion.defaultEffectsSpec()) },

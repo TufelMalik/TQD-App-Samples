@@ -14,7 +14,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import com.techquantum.feature.fooddelivery.domain.*
+import com.techquantum.feature.fooddelivery.domain.Dish
+import com.techquantum.feature.fooddelivery.domain.FoodArt
+import com.techquantum.feature.fooddelivery.domain.Restaurant
 import kotlin.math.cos
 import kotlin.math.sin
 

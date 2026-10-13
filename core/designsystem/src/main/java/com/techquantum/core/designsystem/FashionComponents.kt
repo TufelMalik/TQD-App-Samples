@@ -16,15 +16,13 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Badge
 import androidx.compose.material3.IconButton
@@ -42,6 +40,7 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
@@ -49,30 +48,33 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.text.NumberFormat
 import java.util.Locale
 
 /** Stable-geometry first paint with pearlescent luxury shimmer. Its colors track the active Material surface hierarchy. */
 @Composable
-fun SkeletonShimmer(modifier: Modifier = Modifier) {
+fun SkeletonShimmer(modifier: Modifier = Modifier, label: String = stringResource(R.string.loading_content)) {
     val base = MaterialTheme.colorScheme.surfaceContainerHigh
     val highlight = MaterialTheme.colorScheme.surfaceContainerLowest
     val mid = MaterialTheme.colorScheme.surfaceContainer
-    val transition = rememberInfiniteTransition(label = "Product skeleton")
-    val phase by transition.animateFloat(
-        initialValue = -1f,
-        targetValue = 2f,
-        animationSpec = infiniteRepeatable(tween(1400, easing = LinearEasing), RepeatMode.Restart),
-        label = "Shimmer sweep",
-    )
+    val phase = if (LocalTQDMotionPolicy.current.reduced) 0f else {
+        val transition = rememberInfiniteTransition(label = "Skeleton")
+        val sweep by transition.animateFloat(
+            initialValue = -1f,
+            targetValue = 2f,
+            animationSpec = infiniteRepeatable(tween(1400, easing = LinearEasing), RepeatMode.Restart),
+            label = "Shimmer sweep",
+        )
+        sweep
+    }
     Box(
         modifier
             .clip(MaterialTheme.shapes.medium)
             .semantics {
-                contentDescription = "Loading products"
+                contentDescription = label
                 progressBarRangeInfo = ProgressBarRangeInfo.Indeterminate
             }
             .drawWithCache {
@@ -160,7 +162,7 @@ fun RatingPill(
                 Text(
                     text = "($reviewCount)",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f),
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
                 )
             }
         }
@@ -205,11 +207,17 @@ fun QuantityStepper(
     onIncrease: () -> Unit,
     modifier: Modifier = Modifier,
     touchTargetSize: Dp = 48.dp,
+    itemName: String? = null,
+    minimum: Int = 1,
+    maximum: Int = 99,
 ) {
     val scale = remember { Animatable(1f) }
     val motion = MaterialTheme.motionScheme
+    val reduced = LocalTQDMotionPolicy.current.reduced
+    val decreaseLabel = if (itemName == null) stringResource(R.string.decrease_quantity) else stringResource(R.string.decrease_item_quantity, itemName)
+    val increaseLabel = if (itemName == null) stringResource(R.string.increase_quantity) else stringResource(R.string.increase_item_quantity, itemName)
     LaunchedEffect(quantity) {
-        scale.snapTo(1.10f)
+        scale.animateTo(if (reduced) 1f else 1.06f, animationSpec = motion.fastSpatialSpec())
         scale.animateTo(1f, animationSpec = motion.fastSpatialSpec())
     }
     Surface(
@@ -222,12 +230,12 @@ fun QuantityStepper(
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(
                 onClick = onDecrease,
-                enabled = quantity > 1,
-                modifier = Modifier.size(touchTargetSize).semantics { contentDescription = "Decrease quantity" },
+                enabled = quantity > minimum,
+                modifier = Modifier.size(touchTargetSize).semantics { contentDescription = decreaseLabel },
             ) { Text("−", style = MaterialTheme.typography.titleLarge) }
             AnimatedContent(
                 targetState = quantity,
-                modifier = Modifier.width(28.dp).graphicsLayer { scaleX = scale.value; scaleY = scale.value },
+                modifier = Modifier.widthIn(min = 32.dp).graphicsLayer { scaleX = scale.value; scaleY = scale.value },
                 transitionSpec = {
                     val direction = if (targetState > initialState) 1 else -1
                     (slideInVertically(motion.fastSpatialSpec()) { it * direction } +
@@ -237,16 +245,18 @@ fun QuantityStepper(
                 },
                 label = "Quantity",
             ) { value ->
+                val quantityDescription = stringResource(R.string.quantity_value, value)
                 Text(
                     value.toString(),
-                    modifier = Modifier.width(28.dp).semantics { contentDescription = "Quantity $value" },
+                    modifier = Modifier.widthIn(min = 32.dp).semantics { contentDescription = quantityDescription },
                     style = MaterialTheme.typography.labelLarge,
                     textAlign = TextAlign.Center,
                 )
             }
             IconButton(
                 onClick = onIncrease,
-                modifier = Modifier.size(touchTargetSize).semantics { contentDescription = "Increase quantity" },
+                enabled = quantity < maximum,
+                modifier = Modifier.size(touchTargetSize).semantics { contentDescription = increaseLabel },
             ) { Text("+", style = MaterialTheme.typography.titleLarge) }
         }
     }
@@ -259,11 +269,11 @@ fun formatRupees(amount: Int): String = NumberFormat.getCurrencyInstance(Locale.
 
 /** Roll-up uses the expressive spring rather than a fixed easing curve. */
 @Composable
-fun AnimatedMoney(amount: Int, modifier: Modifier = Modifier) {
+fun AnimatedMoney(amount: Int, modifier: Modifier = Modifier, announce: Boolean = false) {
     val motion = MaterialTheme.motionScheme
     AnimatedContent(
         targetState = amount,
-        modifier = modifier.semantics { liveRegion = LiveRegionMode.Polite },
+        modifier = if (announce) modifier.semantics { liveRegion = LiveRegionMode.Polite } else modifier,
         transitionSpec = {
             val direction = if (targetState > initialState) 1 else -1
             (slideInVertically(motion.fastSpatialSpec()) { it / 2 * direction } +
@@ -282,14 +292,15 @@ fun CartBadge(count: Int, modifier: Modifier = Modifier) {
     if (count <= 0) return
     val motion = MaterialTheme.motionScheme
     val scale = remember { Animatable(1f) }
+    val reduced = LocalTQDMotionPolicy.current.reduced
     LaunchedEffect(count) {
-        scale.snapTo(1.22f)
+        scale.animateTo(if (reduced) 1f else 1.08f, animationSpec = motion.fastSpatialSpec())
         scale.animateTo(1f, animationSpec = motion.fastSpatialSpec())
     }
     Badge(
         modifier = modifier.defaultMinSize(20.dp, 20.dp)
             .graphicsLayer { scaleX = scale.value; scaleY = scale.value }
-            .semantics { contentDescription = "$count items in bag"; liveRegion = LiveRegionMode.Polite },
+            .semantics { contentDescription = "$count items in bag" },
         containerColor = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary,
     ) { Text(if (count > 99) "99+" else count.toString()) }

@@ -1,6 +1,5 @@
 package com.techquantum.core.designsystem.theme
 
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.techquantum.core.designsystem.FashionTheme
 import com.techquantum.core.designsystem.ShowcaseModule

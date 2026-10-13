@@ -58,7 +58,7 @@ sealed interface EcommerceIntent {
     data class SetMaxPrice(val price: Int) : EcommerceIntent
     data object ToggleGrid : EcommerceIntent
     data class ToggleWishlist(val productId: String) : EcommerceIntent
-    data class AddToCart(val productId: String, val color: String, val size: String) : EcommerceIntent
+    data class AddToCart(val productId: String, val color: String, val size: String, val openCart: Boolean = false) : EcommerceIntent
     data class ChangeQuantity(val key: String, val delta: Int) : EcommerceIntent
     data class RemoveFromCart(val key: String) : EcommerceIntent
     data class UpdateAddress(val address: ShippingAddress) : EcommerceIntent
@@ -70,6 +70,6 @@ sealed interface EcommerceIntent {
 }
 
 sealed interface EcommerceEffect {
-    data class AddedToCart(val productName: String) : EcommerceEffect
+    data class AddedToCart(val productName: String, val openCart: Boolean = false) : EcommerceEffect
     data class OrderPlaced(val orderId: String) : EcommerceEffect
 }

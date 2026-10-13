@@ -3,10 +3,9 @@
 package com.techquantum.core.designsystem
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,121 +15,108 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.runtime.getValue
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
+/** Compatibility entry for standalone Shop previews/tests. */
 @Composable
-fun FashionThemePicker(
-    selectedTheme: FashionTheme,
-    darkTheme: Boolean,
-    onThemeSelected: (FashionTheme) -> Unit,
-    onDarkThemeChanged: (Boolean) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberBottomSheetState(
-            initialValue = SheetValue.Hidden,
-            enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded),
-        ),
-        containerColor = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurface,
-    ) {
-        Column(
-            Modifier.fillMaxWidth().fillMaxHeight(0.88f)
-                .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text("Make it yours", style = MaterialTheme.typography.headlineLarge)
-            Text("Select a color palette. Adapts across all modules.", style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected = !darkTheme, onClick = { onDarkThemeChanged(false) }, label = { Text("Light") })
-                FilterChip(selected = darkTheme, onClick = { onDarkThemeChanged(true) }, label = { Text("Dark") })
-            }
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            // Measure the header and footer first; only the palette list consumes remaining height.
-            // ModalBottomSheet applies the safe window insets around this bounded content.
-            Column(
-                Modifier.fillMaxWidth().weight(1f, fill = false)
-                    .verticalScroll(rememberScrollState()).selectableGroup(),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                FashionTheme.entries.forEach { theme ->
-                    val selected = theme == selectedTheme
-                    val surfaceColor by androidx.compose.animation.animateColorAsState(
-                        targetValue = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
-                        label = "theme_surface_color"
-                    )
-                    val borderColor by androidx.compose.animation.animateColorAsState(
-                        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
-                        label = "theme_border_color"
-                    )
-                    Surface(
-                        color = surfaceColor,
-                        contentColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-                        border = BorderStroke(if (selected) 1.5.dp else 1.dp, borderColor),
-                        shadowElevation = if (selected) 2.dp else 0.dp,
-                    ) {
-                        Row(
-                            Modifier.fillMaxWidth().selectable(
-                                selected = selected, role = Role.RadioButton, onClick = { onThemeSelected(theme) },
-                            ).padding(horizontal = 16.dp, vertical = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(14.dp),
-                        ) {
-                            RadioButton(
-                                selected = selected,
-                                onClick = null,
-                                colors = RadioButtonDefaults.colors(
-                                    selectedColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                ),
-                            )
-                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(theme.displayName, style = MaterialTheme.typography.titleMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
-                                Text(theme.description, style = MaterialTheme.typography.bodySmall, color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant)
-                                FashionStoreTheme(theme, darkTheme) { ThemePaletteSwatches() }
-                            }
-                        }
+fun FashionThemePicker(selectedTheme: FashionTheme, darkTheme: Boolean, onThemeSelected: (FashionTheme) -> Unit,
+    onDarkThemeChanged: (Boolean) -> Unit, onDismiss: () -> Unit) {
+    ShowcasePalettePicker(ShowcaseModule.SHOP, selectedTheme,
+        if (darkTheme) AppearanceMode.DARK else AppearanceMode.LIGHT, darkTheme, false,
+        { onThemeSelected(it ?: FashionTheme.LUXEVA) }, { onDarkThemeChanged(it.isDark(darkTheme)) }, {}, onDismiss)
+}
+
+@Composable
+fun ShowcasePalettePicker(module: ShowcaseModule, selected: FashionTheme?, appearance: AppearanceMode,
+    darkTheme: Boolean, reducedMotion: Boolean, onPalette: (FashionTheme?) -> Unit,
+    onAppearance: (AppearanceMode) -> Unit, onReducedMotion: (Boolean) -> Unit, onDismiss: () -> Unit) {
+    ModalBottomSheet(onDismissRequest = onDismiss,
+        sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden,
+            enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)),
+        containerColor = MaterialTheme.colorScheme.surface, contentColor = MaterialTheme.colorScheme.onSurface) {
+        Column(Modifier.fillMaxWidth().fillMaxHeight(.9f).padding(horizontal = 20.dp).padding(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            val moduleName = stringResource(module.labelRes())
+            Text(stringResource(R.string.theme_title, moduleName), style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.semantics { heading() })
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(stringResource(R.string.theme_scope, moduleName), style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.selectableGroup()) {
+                    AppearanceMode.entries.forEach { mode ->
+                        FilterChip(appearance == mode, { onAppearance(mode) }, label = { Text(stringResource(mode.labelRes)) })
+                    }
+                }
+                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                    .toggleable(reducedMotion, role = Role.Switch, onValueChange = onReducedMotion),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(R.string.reduce_motion), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                    Switch(reducedMotion, null)
+                }
+                HorizontalDivider()
+                Column(Modifier.fillMaxWidth().selectableGroup(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (module != ShowcaseModule.SHOP) PaletteRow(stringResource(R.string.theme_default), null,
+                        module.colorScheme(darkTheme), selected == null) { onPalette(null) }
+                    FashionTheme.entries.forEach { theme ->
+                        PaletteRow(theme.displayName, theme.description, theme.colorScheme(darkTheme), selected == theme) { onPalette(theme) }
                     }
                 }
             }
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
-            Button(onClick = onDismiss, modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)) { Text("Done", style = MaterialTheme.typography.titleSmall) }
+            HorizontalDivider()
+            Button(onDismiss, Modifier.fillMaxWidth().heightIn(min = 56.dp)) { Text(stringResource(R.string.theme_done)) }
         }
     }
 }
 
-/** Each preview receives its own provider so every swatch still consumes semantic Material tokens. */
 @Composable
-private fun ThemePaletteSwatches() {
+private fun PaletteRow(title: String, description: String?, preview: ColorScheme, selected: Boolean, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
-    Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        listOf(colors.primary, colors.secondary, colors.tertiary, colors.outline, colors.background).forEach { color ->
-            Surface(
-                modifier = Modifier.size(20.dp), shape = CircleShape,
-                color = color, border = BorderStroke(1.dp, colors.outlineVariant.copy(alpha = 0.6f)),
-                shadowElevation = 1.dp,
-            ) {}
+    // Atomic role changes keep foreground/background contrast safe during live selection.
+    Surface(color = if (selected) colors.primaryContainer else colors.surfaceContainerLow,
+        contentColor = if (selected) colors.onPrimaryContainer else colors.onSurface,
+        shape = MaterialTheme.shapes.large,
+        border = BorderStroke(if (selected) 2.dp else 1.dp, if (selected) colors.primary else colors.outlineVariant)) {
+        Row(Modifier.fillMaxWidth().selectable(selected, role = Role.RadioButton, onClick = onClick).padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            RadioButton(selected, null, colors = RadioButtonDefaults.colors(
+                selectedColor = colors.onPrimaryContainer, unselectedColor = colors.onSurfaceVariant))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                if (description != null) Text(description, style = MaterialTheme.typography.bodySmall)
+                MaterialTheme(colorScheme = preview) {
+                    val swatches = MaterialTheme.colorScheme
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf(swatches.primary, swatches.secondary, swatches.tertiary, swatches.outline, swatches.background).forEach {
+                            Surface(Modifier.size(20.dp), shape = CircleShape, color = it,
+                                border = BorderStroke(1.dp, swatches.outline)) {}
+                        }
+                    }
+                }
+            }
         }
     }
 }

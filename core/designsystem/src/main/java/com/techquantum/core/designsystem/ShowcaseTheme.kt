@@ -10,7 +10,9 @@ import androidx.compose.material3.Shapes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 enum class ShowcaseModule { SHOP, FOOD, POS, BILLING }
 
@@ -44,13 +46,15 @@ fun ShowcaseAppTheme(
     module: ShowcaseModule,
     fashionTheme: FashionTheme,
     darkTheme: Boolean,
+    paletteOverride: FashionTheme? = null,
+    reducedMotion: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    CompositionLocalProvider(LocalFashionTheme provides fashionTheme) {
+    CompositionLocalProvider(LocalFashionTheme provides fashionTheme, LocalTQDMotionPolicy provides TQDMotionPolicy(reducedMotion)) {
         MaterialExpressiveTheme(
-            colorScheme = fashionTheme.colorScheme(darkTheme),
-            motionScheme = MotionScheme.expressive(),
-            typography = FashionTypography,
+            colorScheme = resolveShowcaseColorScheme(module, fashionTheme, darkTheme, paletteOverride),
+            motionScheme = if (reducedMotion) ReducedMotionScheme else MotionScheme.expressive(),
+            typography = if (module == ShowcaseModule.SHOP) FashionTypography else OperationalTypography,
             shapes = Shapes(extraSmall = RoundedCornerShape(6.dp), small = RoundedCornerShape(12.dp),
                 medium = RoundedCornerShape(18.dp), large = RoundedCornerShape(24.dp), extraLarge = RoundedCornerShape(32.dp)),
             content = content,
@@ -60,5 +64,14 @@ fun ShowcaseAppTheme(
 
 @Composable
 fun ShowcaseTheme(module: ShowcaseModule, darkTheme: Boolean, content: @Composable () -> Unit) {
-    ShowcaseAppTheme(module, FashionTheme.LUXEVA, darkTheme, content)
+    ShowcaseAppTheme(module, FashionTheme.LUXEVA, darkTheme, content = content)
 }
+
+private val OperationalTypography = FashionTypography.copy(
+    displayLarge = FashionTypography.displayLarge.copy(fontFamily = FontFamily.SansSerif, fontSize = 32.sp, lineHeight = 40.sp),
+    displayMedium = FashionTypography.displayMedium.copy(fontFamily = FontFamily.SansSerif, fontSize = 28.sp, lineHeight = 36.sp),
+    displaySmall = FashionTypography.displaySmall.copy(fontFamily = FontFamily.SansSerif, fontSize = 26.sp, lineHeight = 34.sp),
+    headlineLarge = FashionTypography.headlineLarge.copy(fontFamily = FontFamily.SansSerif, fontSize = 28.sp),
+    headlineMedium = FashionTypography.headlineMedium.copy(fontFamily = FontFamily.SansSerif, fontSize = 24.sp, lineHeight = 32.sp),
+    headlineSmall = FashionTypography.headlineSmall.copy(fontFamily = FontFamily.SansSerif),
+)

@@ -45,6 +45,9 @@ object TQDDimensions {
 
     // Min touch targets & Interactive Heights
     val touchTargetMin: Dp = 48.dp
+    val operatorTouchTargetMin: Dp = 56.dp
+    val receiptMaxWidth: Dp = 560.dp
+    val formMaxWidth: Dp = 720.dp
     val buttonHeightStandard: Dp = 52.dp
     val buttonHeightLarge: Dp = 56.dp
     val buttonHeightCharge: Dp = 60.dp

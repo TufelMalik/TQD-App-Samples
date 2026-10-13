@@ -23,6 +23,19 @@ local.properties
 # Keystores & release keys
 *.jks
 *.keystore
+*.p12
+*.pem
+*.key
+
+# Local/project secrets and generated artifacts
+*.log
+*.env
+*.secret
+*.properties
+!gradle.properties
+premium-audit.json
+.agents/
+docs/
 
 # OS & Cache files
 .DS_Store

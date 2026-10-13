@@ -1,7 +1,15 @@
 package com.techquantum.tqdappsample
 
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextInput
 import org.junit.Rule
 import org.junit.Test
 
@@ -19,7 +27,7 @@ class EcommerceFlowTest {
         compose.onNodeWithTag("product_detail_screen").assertIsDisplayed()
         compose.onNodeWithText("Buy now").performClick()
         compose.onNodeWithText("Your bag").assertIsDisplayed()
-        compose.onNodeWithContentDescription("Increase quantity").performClick()
+        compose.onNodeWithContentDescription("Increase quantity", substring = true).performClick()
         compose.onNodeWithContentDescription("Quantity 2").assertIsDisplayed()
         compose.onNodeWithText("Continue to checkout").performClick()
         compose.onNodeWithText("Place demo order").performClick()
@@ -44,7 +52,7 @@ class EcommerceFlowTest {
         compose.onAllNodesWithText("Explore")[0].performClick()
         compose.onNodeWithContentDescription("Change fashion theme").performClick()
         compose.onNodeWithText("Athleisure Wear").performScrollTo().performClick()
-        compose.onNodeWithText("Light", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Light", useUnmergedTree = true).performScrollTo().performClick()
         compose.onNodeWithText("Done").assertIsDisplayed().performClick()
         compose.onNodeWithTag("product_listing_screen").assertIsDisplayed()
         compose.onNodeWithText("Food").performClick()
@@ -55,6 +63,25 @@ class EcommerceFlowTest {
 
     private fun fill(label: String, value: String) {
         compose.onNodeWithText(label).performScrollTo().performTextInput(value)
+    }
+
+    @Test fun modulePalettesAndAppearanceSurviveActivityRecreation() {
+        compose.onNodeWithContentDescription("Change fashion theme").performClick()
+        compose.onNodeWithText("Athleisure Wear").performScrollTo().performClick()
+        compose.onNodeWithText("Done").performClick()
+        compose.onNodeWithText("Food").performClick()
+        compose.onNodeWithContentDescription("Color palette").performClick()
+        compose.onNodeWithText("Streetwear Fashion").performScrollTo().performClick()
+        compose.onNodeWithText("Dark").performScrollTo().performClick()
+        compose.onNodeWithText("Done").performClick()
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithContentDescription("Color palette").performClick()
+        compose.onNodeWithText("Streetwear Fashion").performScrollTo().assertIsSelected()
+        compose.onNodeWithText("Dark").performScrollTo().assertIsSelected()
+        compose.onNodeWithText("Done").performClick()
+        compose.onNodeWithText("Shop").performClick()
+        compose.onNodeWithContentDescription("Change fashion theme").performClick()
+        compose.onNodeWithText("Athleisure Wear").performScrollTo().assertIsSelected()
     }
 
     private fun awaitCatalog() {

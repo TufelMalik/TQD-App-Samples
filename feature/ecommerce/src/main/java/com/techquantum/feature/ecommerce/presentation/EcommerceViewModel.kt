@@ -14,7 +14,6 @@ import com.techquantum.feature.ecommerce.domain.usecase.GetCatalogUseCase
 import com.techquantum.feature.ecommerce.domain.usecase.PlaceOrderUseCase
 import com.techquantum.feature.ecommerce.domain.usecase.ValidateShippingAddressUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -24,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class EcommerceViewModel @Inject constructor(
@@ -52,7 +52,7 @@ class EcommerceViewModel @Inject constructor(
         when (intent) {
             is EcommerceIntent.AddToCart -> if (next.cartCount > previous.cartCount) {
                 next.products.firstOrNull { it.id == intent.productId }?.let { product ->
-                    viewModelScope.launch { mutableEffects.emit(EcommerceEffect.AddedToCart(product.name)) }
+                    viewModelScope.launch { mutableEffects.emit(EcommerceEffect.AddedToCart(product.name, intent.openCart)) }
                 }
             }
             EcommerceIntent.PlaceOrder -> if (!previous.placingOrder && next.placingOrder) {

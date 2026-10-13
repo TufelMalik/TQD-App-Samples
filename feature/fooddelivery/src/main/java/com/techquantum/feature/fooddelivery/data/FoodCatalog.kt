@@ -1,6 +1,11 @@
 package com.techquantum.feature.fooddelivery.data
 
-import com.techquantum.feature.fooddelivery.domain.*
+import com.techquantum.feature.fooddelivery.domain.AddOn
+import com.techquantum.feature.fooddelivery.domain.Cuisine
+import com.techquantum.feature.fooddelivery.domain.Dish
+import com.techquantum.feature.fooddelivery.domain.FoodArt
+import com.techquantum.feature.fooddelivery.domain.MenuCategory
+import com.techquantum.feature.fooddelivery.domain.Restaurant
 
 /** Seeded locally so menus, illustrations and checkout work without connectivity. */
 object FoodCatalog {

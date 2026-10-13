@@ -2,7 +2,6 @@ package com.techquantum.feature.pos.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,11 +27,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.techquantum.core.billingengine.MenuItem
-import com.techquantum.core.designsystem.FoodVegGreen
-import com.techquantum.core.designsystem.FoodNonVegBrown
+import com.techquantum.core.designsystem.DietaryIndicator
 import com.techquantum.core.designsystem.formatRupees
 import com.techquantum.core.designsystem.theme.TQDDimensions
 
@@ -79,18 +76,7 @@ fun PosCatalogItemCard(
                     }
                 }
             }
-            val vegColor = if (item.isVeg) FoodVegGreen else FoodNonVegBrown
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Surface(
-                    Modifier.size(12.dp),
-                    shape = RoundedCornerShape(3.dp),
-                    border = BorderStroke(1.dp, vegColor),
-                    color = colors.surface,
-                ) {
-                    Box(Modifier.padding(2.5.dp).background(vegColor, CircleShape))
-                }
-                Text(if (item.isVeg) "Vegetarian" else "Non-vegetarian", style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
-            }
+            DietaryIndicator(item.isVeg)
             Text(formatRupees(item.price), style = MaterialTheme.typography.titleLarge)
         }
     }
